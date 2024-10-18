@@ -1,4 +1,5 @@
 import 'package:delivery_app/page/Riders_Map.dart';
+import 'package:delivery_app/page/Risers_Get.dart';
 import 'package:delivery_app/page/Selecttype.dart';
 import 'package:flutter/material.dart';
 import 'package:delivery_app/page/Login.dart';
@@ -21,7 +22,7 @@ class MyApp extends StatelessWidget {
       //home: LoginPage(),
       //home : RegisterRider()
       // home: RegisterCustomer()
-      home: RidersMapPage(),
+      home: RisersGetPage(),
     );
   }
 }
