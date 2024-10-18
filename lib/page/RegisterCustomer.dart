@@ -12,7 +12,8 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -36,13 +37,15 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                   ),
                 ),
                 Card(
-                  margin: const EdgeInsets.only(top: 100.0), // Margin from top for the card
+                  margin: const EdgeInsets.only(
+                      top: 100.0), // Margin from top for the card
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20.0),
                   ),
                   elevation: 4.0,
                   child: Padding(
-                    padding: const EdgeInsets.all(20.0), // Padding inside the card
+                    padding:
+                        const EdgeInsets.all(20.0), // Padding inside the card
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,7 +68,8 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                               horizontal: 8.0,
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(15.0)),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(15.0)),
                               borderSide: BorderSide.none,
                             ),
                           ),
@@ -88,7 +92,8 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                               horizontal: 8.0,
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(15.0)),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(15.0)),
                               borderSide: BorderSide.none,
                             ),
                           ),
@@ -111,7 +116,8 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                               horizontal: 8.0,
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(15.0)),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(15.0)),
                               borderSide: BorderSide.none,
                             ),
                           ),
@@ -134,7 +140,8 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                               horizontal: 8.0,
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(15.0)),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(15.0)),
                               borderSide: BorderSide.none,
                             ),
                           ),
@@ -158,7 +165,8 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                               horizontal: 8.0,
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(15.0)),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(15.0)),
                               borderSide: BorderSide.none,
                             ),
                           ),
@@ -166,16 +174,19 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                         ),
                         const SizedBox(height: 20.0), // Spacing
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween, // Arrange buttons with space in between
+                          mainAxisAlignment: MainAxisAlignment
+                              .spaceBetween, // Arrange buttons with space in between
                           children: [
                             ElevatedButton(
                               onPressed: () {
                                 // Handle back action
-                                Navigator.pop(context); // Navigate back to the previous screen
+                                Navigator.pop(
+                                    context); // Navigate back to the previous screen
                               },
                               style: ButtonStyle(
                                 backgroundColor: WidgetStateProperty.all<Color>(
-                                  const Color.fromARGB(255, 255, 255, 255), // Color of the back button
+                                  const Color.fromARGB(255, 255, 255,
+                                      255), // Color of the back button
                                 ),
                                 foregroundColor: WidgetStateProperty.all<Color>(
                                   const Color.fromRGBO(0, 253, 21, 0.62),
@@ -183,7 +194,8 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                                 elevation: WidgetStateProperty.all<double>(5.0),
                                 shape: WidgetStateProperty.all<OutlinedBorder>(
                                   RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(15.0), // Round corners of button
+                                    borderRadius: BorderRadius.circular(
+                                        15.0), // Round corners of button
                                   ),
                                 ),
                               ),
@@ -203,7 +215,8 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                                 elevation: WidgetStateProperty.all<double>(5.0),
                                 shape: WidgetStateProperty.all<OutlinedBorder>(
                                   RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(15.0), // Round corners of button
+                                    borderRadius: BorderRadius.circular(
+                                        15.0), // Round corners of button
                                   ),
                                 ),
                               ),

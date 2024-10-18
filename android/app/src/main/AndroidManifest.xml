@@ -1,6 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<!-- ขอสิทธิเข้าถึง Location -->
+<uses-permission android:name="android.permission.ACCESS_COASE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<!-- ขอสิทธิใช้เน็ต -->
+<uses-permission android:name="android.permission.INTERNET" /> 
     <application
-        android:label="delivery_app"
+        android:label="flutter_application_week2"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

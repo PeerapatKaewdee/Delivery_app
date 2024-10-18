@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
       //home: LoginPage(),
       //home : RegisterRider()
       // home: RegisterCustomer()
-      home: RidersMapPage(),
+      home: RegisterCustomer(),
     );
   }
 }
