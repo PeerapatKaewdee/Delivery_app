@@ -42,6 +42,8 @@ dependencies:
   geolocator_android: 4.5.5
   latlong2: ^0.9.1
   flutter_map: ^7.0.2
+  firebase_core: ^3.6.0
+  cloud_firestore: ^5.4.4
 
 dev_dependencies:
   flutter_test:

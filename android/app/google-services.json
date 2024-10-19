@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "470783703804",
+    "project_id": "mini-pro-delivery",
+    "storage_bucket": "mini-pro-delivery.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:470783703804:android:107bd164c2d0f7545af579",
+        "android_client_info": {
+          "package_name": "com.example.delivery_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_4vwNPzg4TT9diSwsu7nTztyWnZvJ8Mc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
