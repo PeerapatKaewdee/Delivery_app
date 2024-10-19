@@ -1,4 +1,8 @@
+import 'package:delivery_app/config/config.dart';
+import 'package:delivery_app/page/Risers_Get.dart';
+import 'package:delivery_app/page/User_send.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -30,7 +34,8 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 Card(
                   margin: const EdgeInsets.only(top: 200.0), // ลดระยะห่าง
-                  color: Colors.white.withOpacity(0.7), // ปรับให้โปร่งใสขึ้นเล็กน้อย
+                  color: Colors.white
+                      .withOpacity(0.7), // ปรับให้โปร่งใสขึ้นเล็กน้อย
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20.0),
                   ),
@@ -57,7 +62,8 @@ class _LoginPageState extends State<LoginPage> {
                               horizontal: 16.0,
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(20.0)),
                               borderSide: BorderSide.none,
                             ),
                           ),
@@ -78,7 +84,8 @@ class _LoginPageState extends State<LoginPage> {
                               horizontal: 16.0,
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(20.0)),
                               borderSide: BorderSide.none,
                             ),
                           ),
@@ -91,19 +98,24 @@ class _LoginPageState extends State<LoginPage> {
                             ElevatedButton(
                               onPressed: () {
                                 // Handle back action
-                                Navigator.pop(context); // or implement your desired logic
+                                Navigator.pop(
+                                    context); // or implement your desired logic
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white, // Color of the back button
-                                foregroundColor: const Color.fromRGBO(0, 253, 21, 0.62),
+                                backgroundColor:
+                                    Colors.white, // Color of the back button
+                                foregroundColor:
+                                    const Color.fromRGBO(0, 253, 21, 0.62),
                                 elevation: 5.0,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15.0), // Round corners of button
+                                  borderRadius: BorderRadius.circular(
+                                      15.0), // Round corners of button
                                 ),
                               ),
                               child: const Text('Back'),
                             ),
-                            const SizedBox(width: 10.0), // เพิ่มระยะห่างระหว่างปุ่ม
+                            const SizedBox(
+                                width: 10.0), // เพิ่มระยะห่างระหว่างปุ่ม
                             ElevatedButton(
                               onPressed: () {
                                 // Handle login action
@@ -147,5 +159,39 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
+  }
+
+  void login() async {
+    var config = await Configuration.getConfig();
+    var usl = config['apiEndpoint'];
+    String debug = '';
+    int type = 0;
+    if (usernameController.text != ' ' ||
+        passwordController.text != ' ' ||
+        usernameController.text.isEmpty ||
+        passwordController.text.isEmpty) {
+      if (type == 0) {
+        
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => UserSendPage(),
+            ));
+      } else if (type == 1) {
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RidersGetPage(),
+            ));
+      } else {
+        setState(() {
+          debug = "usernamme or password invalid !!!";
+        });
+      }
+    } else {
+      setState(() {
+        debug = "username or password in put information";
+      });
+    }
   }
 }
