@@ -41,7 +41,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.18.0"
-
   cross_file:
     dependency: transitive
     description:
@@ -50,7 +49,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.3.4+2"
-
   crypto:
     dependency: transitive
     description:
@@ -59,7 +57,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.6"
-
   cupertino_icons:
     dependency: "direct main"
     description:
@@ -84,7 +81,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.1"
-
   ffi:
     dependency: transitive
     description:
@@ -125,7 +121,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.9.3+3"
-
   fixnum:
     dependency: transitive
     description:
@@ -134,7 +129,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.1"
-
   flutter:
     dependency: "direct main"
     description: flutter
@@ -148,16 +142,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.2"
-
-  flutter_plugin_android_lifecycle:
-    dependency: transitive
-    description:
-      name: flutter_plugin_android_lifecycle
-      sha256: "9ee02950848f61c4129af3d6ec84a1cfc0e47931abc746b03e7a3bc3e8ff6eda"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.22"
-
   flutter_map:
     dependency: "direct main"
     description:
@@ -166,7 +150,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.2"
-
+  flutter_plugin_android_lifecycle:
+    dependency: transitive
+    description:
+      name: flutter_plugin_android_lifecycle
+      sha256: "9b78450b89f059e96c9ebb355fa6b3df1d6b330436e0b885fb49594c41721398"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.23"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -177,7 +168,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-
   geolocator:
     dependency: "direct main"
     description:
@@ -226,7 +216,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.3"
-
   get:
     dependency: "direct main"
     description:
@@ -251,7 +240,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.2"
-
   image_picker:
     dependency: "direct main"
     description:
@@ -264,10 +252,10 @@ packages:
     dependency: transitive
     description:
       name: image_picker_android
-      sha256: "8c5abf0dcc24fe6e8e0b4a5c0b51a5cf30cefdf6407a3213dae61edc75a70f56"
+      sha256: d34e0d9e024e81321b2aeed7b202ec6181cc282e6a1c0c0b4e6ad07ef1065d82
       url: "https://pub.dev"
     source: hosted
-    version: "0.8.12+12"
+    version: "0.8.12+16"
   image_picker_for_web:
     dependency: transitive
     description:
@@ -316,7 +304,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.1+1"
-
   intl:
     dependency: transitive
     description:
@@ -333,7 +320,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.9.1"
-
   leak_tracker:
     dependency: transitive
     description:
@@ -405,20 +391,20 @@ packages:
       sha256: bdb68674043280c3428e9ec998512fb681678676b3c54e773629ffe74419f8c7
       url: "https://pub.dev"
     source: hosted
-
-    version: "1.12.0"
-  mime:
-    dependency: transitive
-    description:
-      name: mime
-      sha256: "41a20518f0cb1256669420fdba0cd90d21561e560ac240f26ef8322e45bb7ed6"
-
     version: "1.15.0"
   mgrs_dart:
     dependency: transitive
     description:
       name: mgrs_dart
       sha256: fb89ae62f05fa0bb90f70c31fc870bcbcfd516c843fb554452ab3396f78586f7
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.0"
+  mime:
+    dependency: transitive
+    description:
+      name: mime
+      sha256: "41a20518f0cb1256669420fdba0cd90d21561e560ac240f26ef8322e45bb7ed6"
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
@@ -430,7 +416,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.9.0"
-
   path_provider:
     dependency: "direct main"
     description:
@@ -443,10 +428,10 @@ packages:
     dependency: transitive
     description:
       name: path_provider_android
-      sha256: "6f01f8e37ec30b07bc424b4deabac37cacb1bc7e2e515ad74486039918a37eb7"
+      sha256: c464428172cb986b758c6d1724c603097febb8fb855aa265aeecc9280c294d4a
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.10"
+    version: "2.2.12"
   path_provider_foundation:
     dependency: transitive
     description:
@@ -487,8 +472,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.6"
-
-
   plugin_platform_interface:
     dependency: transitive
     description:
@@ -497,7 +480,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.8"
-
   polylabel:
     dependency: transitive
     description:
@@ -514,7 +496,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.0"
-
   sky_engine:
     dependency: transitive
     description: flutter
@@ -580,12 +561,6 @@ packages:
     dependency: transitive
     description:
       name: typed_data
-
-      sha256: facc8d6582f16042dd49f2463ff1bd6e2c9ef9f3d5da3d9b087e244a7b564b3c
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.3.2"
-
       sha256: f9049c039ebfeb4cf7a7104a675823cd72dba8297f264b6637062516699fa006
       url: "https://pub.dev"
     source: hosted
@@ -606,7 +581,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.5.1"
-
   vector_math:
     dependency: transitive
     description:
@@ -622,10 +596,7 @@ packages:
       sha256: "5c5f338a667b4c644744b661f309fb8080bb94b18a7e91ef1dbd343bed00ed6d"
       url: "https://pub.dev"
     source: hosted
-    version: "14.2.1"
-
     version: "14.2.5"
-
   web:
     dependency: transitive
     description:
@@ -634,7 +605,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.0"
-
+  wkt_parser:
+    dependency: transitive
+    description:
+      name: wkt_parser
+      sha256: "8a555fc60de3116c00aad67891bcab20f81a958e4219cc106e3c037aa3937f13"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.0"
   xdg_directories:
     dependency: transitive
     description:
@@ -644,17 +622,5 @@ packages:
     source: hosted
     version: "1.1.0"
 sdks:
-  dart: ">=3.4.3 <4.0.0"
-  flutter: ">=3.22.0"
-
-  wkt_parser:
-    dependency: transitive
-    description:
-      name: wkt_parser
-      sha256: "8a555fc60de3116c00aad67891bcab20f81a958e4219cc106e3c037aa3937f13"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.0"
-sdks:
   dart: ">=3.5.0 <4.0.0"
-  flutter: ">=3.18.0-18.0.pre.54"
+  flutter: ">=3.24.0"
