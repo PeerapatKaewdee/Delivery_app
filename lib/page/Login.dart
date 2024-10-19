@@ -1,8 +1,12 @@
+import 'dart:math';
+
 import 'package:delivery_app/config/config.dart';
+import 'package:delivery_app/page/RegisterCustomer.dart';
 import 'package:delivery_app/page/Risers_Get.dart';
 import 'package:delivery_app/page/User_send.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -98,8 +102,11 @@ class _LoginPageState extends State<LoginPage> {
                             ElevatedButton(
                               onPressed: () {
                                 // Handle back action
-                                Navigator.pop(
-                                    context); // or implement your desired logic
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => RegisterCustomer(),
+                                    ));
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor:
@@ -119,6 +126,7 @@ class _LoginPageState extends State<LoginPage> {
                             ElevatedButton(
                               onPressed: () {
                                 // Handle login action
+                                login();
                               },
                               style: ButtonStyle(
                                 backgroundColor: WidgetStateProperty.all<Color>(
@@ -164,6 +172,9 @@ class _LoginPageState extends State<LoginPage> {
   void login() async {
     var config = await Configuration.getConfig();
     var usl = config['apiEndpoint'];
+    var model = {
+      
+    };
     String debug = '';
     int type = 0;
     if (usernameController.text != ' ' ||
@@ -171,11 +182,13 @@ class _LoginPageState extends State<LoginPage> {
         usernameController.text.isEmpty ||
         passwordController.text.isEmpty) {
       if (type == 0) {
-        
+        http.get(Uri.parse("$usl/"));
         Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => UserSendPage(),
+              builder: (context) => UserSendPage(
+                id: 1,
+              ),
             ));
       } else if (type == 1) {
         Navigator.pushReplacement(
