@@ -24,10 +24,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       //home: LoginPage(),
-      //home : RegisterRider()
+      home : RegisterRider()
       // home: RegisterCustomer()
       // home:Selecttype(),
-      home: UserSendPage(),
+      // home: UserSendPage(),
     );
   }
 }
