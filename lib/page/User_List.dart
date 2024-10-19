@@ -11,7 +11,11 @@ class UserListPage extends StatefulWidget {
 
 class _UserListPageState extends State<UserListPage> {
   int _selectedStatus = 0; // Current status
-  List<String> _items = ["รายการที่ 1", "รายการที่ 2", "รายการที่ 3"]; // Items to display
+  List<String> _items = [
+    "รายการที่ 1",
+    "รายการที่ 2",
+    "รายการที่ 3"
+  ]; // Items to display
 
   @override
   Widget build(BuildContext context) {
@@ -138,7 +142,10 @@ class _UserListPageState extends State<UserListPage> {
               // Navigate to UserSendPage
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => const UserSendPage()),
+                MaterialPageRoute(
+                    builder: (context) => const UserSendPage(
+                          id: 1,
+                        )),
               );
             } else if (index == 1) {
               // Navigate to UserMapPage
