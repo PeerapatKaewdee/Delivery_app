@@ -53,6 +53,23 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const SizedBox(height: 10.0),
+                            Center(
+                              child: GestureDetector(
+                                onTap: () {
+                                  // Handle image upload here
+                                },
+                                child: CircleAvatar(
+                                  radius: 45, // Size of the avatar
+                                  backgroundColor: Colors.grey[300],
+                                  child: const Icon(
+                                    Icons.person,
+                                    size: 40, // Size of icon
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 10.0),
                             const Text(
                               'Username',
                               style: TextStyle(fontWeight: FontWeight.bold),
@@ -250,7 +267,7 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                       ),
                     ),
                     SizedBox(
-                      height: 100,
+                      height: 60,
                     ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
