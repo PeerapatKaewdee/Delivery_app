@@ -31,6 +31,7 @@ class _RidersMapPageState extends State<RidersMapPage> {
               },
               child: const Text("Get location")),
           Expanded(
+            flex: 4,
             child: FlutterMap(
               mapController: mapController,
               options: MapOptions(
@@ -67,6 +68,14 @@ class _RidersMapPageState extends State<RidersMapPage> {
               ],
             ),
           ),
+          Expanded(
+            flex: 1,
+            child: Column(
+              children: [
+                FilledButton(onPressed: () {}, child: Text("ถึงจุดหมายแแล้ว"))
+              ],
+            ),
+          ),
         ]),
       ),
     );
@@ -74,6 +83,7 @@ class _RidersMapPageState extends State<RidersMapPage> {
 }
 
 Future<Position> _determinePosition() async {
+  log('message');
   bool serviceEnabled;
   LocationPermission permission;
 
