@@ -119,7 +119,7 @@ class _LoginPageState extends State<LoginPage> {
                                       15.0), // Round corners of button
                                 ),
                               ),
-                              child: const Text('Back'),
+                              child: const Text('Sign-in'),
                             ),
                             const SizedBox(
                                 width: 10.0), // เพิ่มระยะห่างระหว่างปุ่ม
@@ -172,11 +172,9 @@ class _LoginPageState extends State<LoginPage> {
   void login() async {
     var config = await Configuration.getConfig();
     var usl = config['apiEndpoint'];
-    var model = {
-      
-    };
+    var model = {};
     String debug = '';
-    int type = 0;
+    int type = 1;
     if (usernameController.text != ' ' ||
         passwordController.text != ' ' ||
         usernameController.text.isEmpty ||
