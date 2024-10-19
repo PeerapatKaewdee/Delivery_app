@@ -1,12 +1,17 @@
+import 'package:delivery_app/firebase_options.dart';
 import 'package:delivery_app/page/Selecttype.dart';
 import 'package:delivery_app/page/User_send.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:delivery_app/page/Login.dart';
 import 'package:delivery_app/page/RegisterCustomer.dart';
 import 'package:delivery_app/page/RegisterRider.dart';
 import 'package:delivery_app/page/Selecttype.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   runApp(const MyApp());
 }
 
@@ -21,8 +26,8 @@ class MyApp extends StatelessWidget {
       //home: LoginPage(),
       //home : RegisterRider()
       // home: RegisterCustomer()
-     // home:Selecttype(),
-     home:UserSendPage(),
-   );
+      // home:Selecttype(),
+      home: UserSendPage(),
+    );
   }
 }
