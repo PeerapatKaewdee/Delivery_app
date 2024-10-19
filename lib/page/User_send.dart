@@ -3,7 +3,7 @@ import 'package:delivery_app/page/User_Map.dart'; // Import UserMapPage
 import 'package:delivery_app/page/User_List.dart'; // Import UserListPage
 
 class UserSendPage extends StatefulWidget {
-  const UserSendPage({super.key});
+  const UserSendPage({super.key, required id});
 
   @override
   State<UserSendPage> createState() => _UserSendPageState();

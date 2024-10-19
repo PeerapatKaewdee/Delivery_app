@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class RisersGetPage extends StatefulWidget {
-  const RisersGetPage({super.key});
+class RidersGetPage extends StatefulWidget {
+  const RidersGetPage({super.key});
 
   @override
-  State<RisersGetPage> createState() => _RisersGetPageState();
+  State<RidersGetPage> createState() => _RidersGetPageState();
 }
 
-class _RisersGetPageState extends State<RisersGetPage> {
+class _RidersGetPageState extends State<RidersGetPage> {
   @override
   Widget build(BuildContext context) {
     // ใช้ MediaQuery เพื่อดึงข้อมูลเกี่ยวกับขนาดหน้าจอ
@@ -133,6 +133,6 @@ class _RisersGetPageState extends State<RisersGetPage> {
 
 void main() {
   runApp(const MaterialApp(
-    home: RisersGetPage(),
+    home: RidersGetPage(),
   ));
 }

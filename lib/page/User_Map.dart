@@ -180,7 +180,7 @@ class _UserMapPageState extends State<UserMapPage> {
             if (index == 0) {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => const UserSendPage()),
+                MaterialPageRoute(builder: (context) => const UserSendPage(id: 1,)),
               );
             } else if (index == 2) { // When tapping Receipt List
               Navigator.pushReplacement(

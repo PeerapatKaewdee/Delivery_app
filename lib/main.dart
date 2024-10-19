@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
       //home : RegisterRider()
       // home: RegisterCustomer()
       // home:Selecttype(),
-      home: UserSendPage(),
+      home: LoginPage(),
     );
   }
 }
