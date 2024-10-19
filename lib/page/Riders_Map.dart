@@ -68,6 +68,7 @@ class _RidersMapPageState extends State<RidersMapPage> {
               ],
             ),
           ),
+          
           Expanded(
             flex: 1,
             child: Column(
@@ -98,9 +99,10 @@ Future<Position> _determinePosition() async {
 
   permission = await Geolocator.checkPermission();
   if (permission == LocationPermission.denied) {
+    log('2');
     permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.denied) {
-      // Permissions are denied, next time you could try
+      log("12"); // Permissions are denied, next time you could try
       // requesting permissions again (this is also where
       // Android's shouldShowRequestPermissionRationale
       // returned true. According to Android guidelines
@@ -110,6 +112,7 @@ Future<Position> _determinePosition() async {
   }
 
   if (permission == LocationPermission.deniedForever) {
+    log('123');
     // Permissions are denied forever, handle appropriately.
     return Future.error(
         'Location permissions are permanently denied, we cannot request permissions.');
