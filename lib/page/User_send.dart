@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:delivery_app/page/User_Map.dart'; // Import UserMapPage
+import 'package:delivery_app/page/User_List.dart'; // Import UserListPage
 
 class UserSendPage extends StatefulWidget {
   const UserSendPage({super.key});
@@ -11,15 +13,13 @@ class _UserSendPageState extends State<UserSendPage> {
   final TextEditingController _receiverPhoneController = TextEditingController();
   final TextEditingController _itemDetailsController = TextEditingController();
 
-  int _selectedIndex = 0; // ใช้สำหรับเก็บสถานะของ Bottom Navigation
+  int _selectedIndex = 0; // Store the status of Bottom Navigation
 
   void _createDelivery() {
     String receiverPhone = _receiverPhoneController.text;
     String itemDetails = _itemDetailsController.text;
 
-    // ตรวจสอบข้อมูลและประมวลผลที่นี่
     if (receiverPhone.isNotEmpty && itemDetails.isNotEmpty) {
-      // ทำการบันทึกข้อมูล
       print('Receiver Phone: $receiverPhone');
       print('Item Details: $itemDetails');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -36,7 +36,20 @@ class _UserSendPageState extends State<UserSendPage> {
     setState(() {
       _selectedIndex = index;
     });
-    // เพิ่มการนำทางไปยังหน้าอื่น ๆ ตามที่เลือก
+
+    if (index == 1) {
+      // Navigate to UserMapPage for "รายการส่ง"
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const UserMapPage()),
+      );
+    } else if (index == 2) {
+      // Navigate to UserListPage for "รายการรับ"
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const UserListPage()),
+      );
+    }
   }
 
   @override
@@ -45,12 +58,12 @@ class _UserSendPageState extends State<UserSendPage> {
       appBar: AppBar(
         title: const Text('สร้างรายการส่งสินค้า'),
       ),
-      body: Center( // ใช้ Center widget เพื่อจัดให้อยู่กลาง
+      body: Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center, // จัดให้อยู่กลางตามแนวตั้ง
-            crossAxisAlignment: CrossAxisAlignment.center, // จัดให้อยู่กลางตามแนวนอน
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const Text(
                 'ค้นหาผู้รับ',
@@ -58,16 +71,16 @@ class _UserSendPageState extends State<UserSendPage> {
               ),
               const SizedBox(height: 8),
               Container(
-                width: 300, // ปรับขนาดของช่องกรอกเบอร์โทร
+                width: 300,
                 decoration: BoxDecoration(
-                  color: Colors.white, // สีพื้นหลัง
-                  borderRadius: BorderRadius.circular(8), // มุมมน
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.3), // เงา
+                      color: Colors.grey.withOpacity(0.3),
                       spreadRadius: 1,
                       blurRadius: 5,
-                      offset: const Offset(0, 3), // เงาอยู่ด้านล่าง
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
@@ -75,20 +88,19 @@ class _UserSendPageState extends State<UserSendPage> {
                   controller: _receiverPhoneController,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(
-                      borderSide: BorderSide.none, // ไม่มีขอบ
+                      borderSide: BorderSide.none,
                     ),
-                    // ไม่ใส่ labelText เพื่อไม่ให้มีข้อความบนขอบ
                   ),
                   keyboardType: TextInputType.phone,
                 ),
               ),
-              const SizedBox(height: 8), // เว้นระยะห่างระหว่างช่องกรอกกับปุ่ม
+              const SizedBox(height: 8),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue, // ปุ่มสีน้ำเงิน
+                  backgroundColor: Colors.blue,
                 ),
                 onPressed: () {
-                  // เพิ่มฟังก์ชันสำหรับค้นหาผู้รับที่นี่
+                  // Add search receiver functionality here
                 },
                 child: const Text('ค้นหาผู้รับ'),
               ),
@@ -99,16 +111,16 @@ class _UserSendPageState extends State<UserSendPage> {
               ),
               const SizedBox(height: 8),
               Container(
-                width: 300, // ปรับขนาดให้เท่ากับช่องเบอร์โทร
+                width: 300,
                 decoration: BoxDecoration(
-                  color: Colors.white, // สีพื้นหลัง
-                  borderRadius: BorderRadius.circular(8), // มุมมน
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.3), // เงา
+                      color: Colors.grey.withOpacity(0.3),
                       spreadRadius: 1,
                       blurRadius: 5,
-                      offset: const Offset(0, 3), // เงาอยู่ด้านล่าง
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
@@ -116,17 +128,16 @@ class _UserSendPageState extends State<UserSendPage> {
                   controller: _itemDetailsController,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(
-                      borderSide: BorderSide.none, // ไม่มีขอบ
+                      borderSide: BorderSide.none,
                     ),
-                    // ไม่ใส่ labelText เพื่อไม่ให้มีข้อความบนขอบ
                   ),
-                  maxLines: 3, // อนุญาตให้มีหลายบรรทัด
+                  maxLines: 3,
                 ),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green, // ปุ่มสีเขียว
+                  backgroundColor: Colors.green,
                 ),
                 onPressed: _createDelivery,
                 child: const Text('สร้างรายการส่งสินค้า'),
@@ -142,7 +153,7 @@ class _UserSendPageState extends State<UserSendPage> {
             label: 'หน้าแรก',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.move_to_inbox), // ไอคอนสำหรับรายการส่ง
+            icon: Icon(Icons.move_to_inbox), // Icon for Delivery List
             label: 'รายการส่ง',
           ),
           BottomNavigationBarItem(
@@ -154,11 +165,11 @@ class _UserSendPageState extends State<UserSendPage> {
             label: 'โปรไฟล์',
           ),
         ],
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
+        currentIndex: _selectedIndex, // Set default status
         selectedItemColor: Colors.blue,
         unselectedItemColor: Colors.grey,
         showUnselectedLabels: true,
+        onTap: _onItemTapped, // Add onTap function
       ),
     );
   }
