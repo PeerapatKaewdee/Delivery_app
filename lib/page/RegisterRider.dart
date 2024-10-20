@@ -1,10 +1,15 @@
+import 'dart:io';
+
 import 'package:delivery_app/config/config.dart';
 import 'package:delivery_app/page/Login.dart';
 import 'package:delivery_app/page/RegisterCustomer.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert'; // for jsonEncode
-import 'dart:developer'; // for log
+import 'dart:developer';
+
+import 'package:image_picker/image_picker.dart';
+import 'package:latlong2/latlong.dart'; // for log
 // Import your configuration file here
 
 class RegisterRider extends StatefulWidget {
@@ -24,7 +29,8 @@ class _RegisterRiderState extends State<RegisterRider> {
       TextEditingController();
 
   String url = ''; // Initialize the URL variable
-
+  LatLng? selectedLocation;
+  String address = '';
   @override
   void initState() {
     super.initState();
@@ -39,6 +45,8 @@ class _RegisterRiderState extends State<RegisterRider> {
 
   @override
   Widget build(BuildContext context) {
+    final ImagePicker picker = ImagePicker();
+    XFile? image;
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
@@ -70,17 +78,37 @@ class _RegisterRiderState extends State<RegisterRider> {
                             const SizedBox(height: 10.0),
                             Center(
                               child: GestureDetector(
-                                onTap: () {
-                                  // Handle image upload here
+                                onTap: () async {
+                                  final XFile? pickedImage = await picker
+                                      .pickImage(source: ImageSource.gallery);
+                                  if (pickedImage != null) {
+                                    log(pickedImage.path);
+                                    setState(() {
+                                      image =
+                                          pickedImage; // อัปเดตค่า image ที่เลือก
+                                    });
+                                  } else {
+                                    log('No Image');
+                                  }
                                 },
                                 child: CircleAvatar(
-                                  radius: 45, // Size of the avatar
+                                  radius: 45, // ขนาดของ avatar
                                   backgroundColor: Colors.grey[300],
-                                  child: const Icon(
-                                    Icons.person,
-                                    size: 40, // Size of icon
-                                    color: Colors.white,
-                                  ),
+                                  child: image !=
+                                          null // ถ้า image มีค่า ให้แสดงรูปที่เลือกแทนไอคอน
+                                      ? ClipOval(
+                                          child: Image.file(
+                                            File(image!.path),
+                                            fit: BoxFit.cover,
+                                            width: 90,
+                                            height: 90,
+                                          ),
+                                        )
+                                      : const Icon(
+                                          Icons.person,
+                                          size: 40, // ขนาดไอคอน
+                                          color: Colors.white,
+                                        ),
                                 ),
                               ),
                             ),
