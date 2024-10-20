@@ -136,6 +136,7 @@ class _RegisterRiderState extends State<RegisterRider> {
                                   borderSide: BorderSide.none,
                                 ),
                               ),
+                              keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 10.0), // Spacing
                             const Text(
@@ -164,7 +165,7 @@ class _RegisterRiderState extends State<RegisterRider> {
                             ),
                             const SizedBox(height: 10.0), // Spacing
                             const Text(
-                              'Email',
+                              'ทะเบียนรถ',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 5.0),

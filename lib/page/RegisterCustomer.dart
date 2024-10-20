@@ -1,11 +1,16 @@
 import 'dart:developer';
 import 'dart:io';
-
+import 'package:delivery_app/config/config.dart';
+import 'package:flutter/material.dart';
 import 'package:delivery_app/page/Login.dart';
 import 'package:delivery_app/page/RegisterRider.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_navigation/get_navigation.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+// import 'package:latlong2/latlong.dart';
 
 class RegisterCustomer extends StatefulWidget {
   const RegisterCustomer({super.key});
@@ -15,14 +20,58 @@ class RegisterCustomer extends StatefulWidget {
 }
 
 class _RegisterCustomerState extends State<RegisterCustomer> {
-  final TextEditingController usernameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
   final ImagePicker picker = ImagePicker();
   XFile? image;
+  final TextEditingController addressController = TextEditingController();
+  LatLng? selectedPosition;
+  GoogleMapController? mapController;
+  bool isLoadingLocation = true;
+  String debug = '';
+  Future<LatLng> _getCurrentLocation() async {
+    // ตรวจสอบและขอสิทธิ์การเข้าถึงตำแหน่ง
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      await Geolocator.openLocationSettings();
+      return Future.error('Location services are disabled.');
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permission denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error('Location permissions are permanently denied.');
+    }
+
+    Position currentPosition = await Geolocator.getCurrentPosition();
+    return LatLng(currentPosition.latitude, currentPosition.longitude);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // เรียกฟังก์ชันนี้ใน initState เพื่อดึงตำแหน่งปัจจุบัน
+    _getCurrentLocation().then((position) {
+      setState(() {
+        selectedPosition = position;
+        isLoadingLocation = false;
+      });
+    }).catchError((error) {
+      print("Error getting location: $error");
+    });
+  }
+
+  void _onMapCreated(GoogleMapController controller) {
+    mapController = controller;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -95,31 +144,6 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 10.0),
-                            const Text(
-                              'Username',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 5.0),
-                            TextField(
-                              controller: usernameController,
-                              style:
-                                  const TextStyle(fontSize: 14.0), // Font size
-                              decoration: const InputDecoration(
-                                isDense: true,
-                                filled: true,
-                                fillColor: Colors.white,
-                                contentPadding: EdgeInsets.symmetric(
-                                  vertical: 10.0,
-                                  horizontal: 8.0,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(15.0)),
-                                  borderSide: BorderSide.none,
-                                ),
-                              ),
-                            ),
                             const SizedBox(height: 10.0), // Spacing
                             const Text(
                               'Phone',
@@ -144,56 +168,57 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                                   borderSide: BorderSide.none,
                                 ),
                               ),
+                              keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 10.0), // Spacing
                             const Text(
-                              'Email',
+                              'Adress',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            const SizedBox(height: 5.0), TextField(
-                              controller: phoneController,
-                              style:
-                                  const TextStyle(fontSize: 14.0), // Font size
-                              decoration: const InputDecoration(
-                                isDense: true,
-                                filled: true,
-                                fillColor: Colors.white,
-                                contentPadding: EdgeInsets.symmetric(
-                                  vertical: 10.0,
-                                  horizontal: 8.0,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(15.0)),
-                                  borderSide: BorderSide.none,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 10.0), // Spacing
-                            const Text(
-                              'Address',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 5.0),
-                            TextField(
-                              controller: emailController,
-                              style:
-                                  const TextStyle(fontSize: 14.0), // Font size
-                              decoration: const InputDecoration(
-                                isDense: true,
-                                filled: true,
-                                fillColor: Colors.white,
-                                contentPadding: EdgeInsets.symmetric(
-                                  vertical: 10.0,
-                                  horizontal: 8.0,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(15.0)),
-                                  borderSide: BorderSide.none,
-                                ),
-                              ),
-                            ),
+                            isLoadingLocation
+                                ? const CircularProgressIndicator() // แสดงการโหลดขณะรอการดึงตำแหน่ง
+                                : SingleChildScrollView(
+                                    child: Column(children: [
+                                    TextField(
+                                      controller: addressController,
+                                      readOnly: true, // ปิดการพิมพ์
+                                      decoration: const InputDecoration(
+                                        hintText: 'Select location from map',
+                                        isDense: true,
+                                        filled: true,
+                                        fillColor: Colors.white,
+                                        contentPadding: EdgeInsets.symmetric(
+                                          vertical: 10.0,
+                                          horizontal: 8.0,
+                                        ),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(15.0)),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                      ),
+                                      onTap: () async {
+                                        LatLng? result = await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                SelectLocationMap(
+                                              initialPosition:
+                                                  selectedPosition!,
+                                            ),
+                                          ),
+                                        );
+
+                                        if (result != null) {
+                                          setState(() {
+                                            selectedPosition = result;
+                                            addressController.text =
+                                                'Lat: ${result.latitude}, Lng: ${result.longitude}';
+                                          });
+                                        }
+                                      },
+                                    ),
+                                  ])),
                             const SizedBox(height: 10.0), // Spacing
                             const Text(
                               'Password',
@@ -219,6 +244,7 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                                 ),
                               ),
                               obscureText: true,
+                              // keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 10.0), // Spacing
                             const Text(
@@ -245,8 +271,10 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                                 ),
                               ),
                               obscureText: true,
+                              // keyboardType: TextInputType.number,
                             ),
-                            const SizedBox(height: 20.0), // Spacing
+                            Text(debug),
+                            const SizedBox(height: 20.0),
                             Row(
                               mainAxisAlignment: MainAxisAlignment
                                   .spaceBetween, // Arrange buttons with space in between
@@ -282,11 +310,7 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                                 ),
                                 ElevatedButton(
                                   onPressed: () {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => LoginPage(),
-                                        ));
+                                    check();
                                     // Handle register action
                                   },
                                   style: ButtonStyle(
@@ -344,6 +368,145 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
           ),
         ),
       ),
+    );
+  }
+
+  void check() async {
+    log('message12');
+    var config = await Configuration.getConfig();
+    var url = config['apiEndpoint'];
+    if (phoneController.text != '') {
+      if (passwordController.text != '' ||
+          confirmPasswordController.text != '') {
+        if (passwordController.text == confirmPasswordController.text) {
+          http.get(Uri.parse("$url/")).then((value) => {log(value.toString())});
+          log('3');
+          log('33');
+        } else {
+          log('password invalid.');
+          setState(() {
+            debug = "password invalid.";
+          });
+        }
+      } else {
+        log('4');
+        setState(() {
+          debug = "password invalid";
+        });
+      }
+    } else {
+      log(phoneController.text);
+      log('2');
+      setState(() {
+        debug = "input Phone Pls.";
+      });
+    }
+  }
+}
+
+class SelectLocationMap extends StatefulWidget {
+  final LatLng initialPosition;
+
+  const SelectLocationMap({super.key, required this.initialPosition});
+
+  @override
+  State<SelectLocationMap> createState() => _SelectLocationMapState();
+}
+
+class _SelectLocationMapState extends State<SelectLocationMap> {
+  LatLng? selectedPosition;
+  GoogleMapController? _mapController;
+  LatLng? currentLocation;
+  // LatLng latLng = const LatLng(16.246825669508297, 103.25199289277295);
+
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentLocation();
+  }
+
+  Future<void> _getCurrentLocation() async {
+    // ตรวจสอบและขอสิทธิ์การเข้าถึงตำแหน่ง
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      await Geolocator.openLocationSettings();
+      return;
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return;
+    }
+
+    // ดึงตำแหน่งปัจจุบัน
+    Position position = await Geolocator.getCurrentPosition();
+    setState(() {
+      currentLocation = LatLng(position.latitude, position.longitude);
+      selectedPosition = currentLocation;
+    });
+
+    // ย้ายกล้องไปที่ตำแหน่งปัจจุบัน
+    if (_mapController != null) {
+      _mapController!.animateCamera(
+        CameraUpdate.newLatLng(currentLocation!),
+      );
+    }
+  }
+
+  void _onMapCreated(GoogleMapController controller) {
+    _mapController = controller;
+    if (currentLocation != null) {
+      _mapController!.animateCamera(
+        CameraUpdate.newLatLng(currentLocation!),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Select Location'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.check),
+            onPressed: () {
+              Navigator.pop(context, selectedPosition);
+            },
+          ),
+        ],
+      ),
+      body: currentLocation == null
+          ? const Center(
+              child: CircularProgressIndicator()) // โหลดตำแหน่งปัจจุบัน
+          : GoogleMap(
+              onMapCreated: _onMapCreated,
+              initialCameraPosition: CameraPosition(
+                target: widget.initialPosition ??
+                    currentLocation!, // ถ้ามีตำแหน่งจาก widget ให้ใช้, ถ้าไม่มีก็ใช้ตำแหน่งปัจจุบัน
+                zoom: 15.0,
+              ),
+              onTap: (LatLng position) {
+                setState(() {
+                  selectedPosition = position;
+                });
+              },
+              markers: selectedPosition != null
+                  ? {
+                      Marker(
+                        markerId: const MarkerId('selected_location'),
+                        position: selectedPosition!,
+                      ),
+                    }
+                  : {},
+            ),
     );
   }
 }
