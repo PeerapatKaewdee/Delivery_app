@@ -1,7 +1,11 @@
+import 'dart:developer';
+import 'dart:io';
+
 import 'package:delivery_app/page/Login.dart';
 import 'package:delivery_app/page/RegisterRider.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_navigation/get_navigation.dart';
+import 'package:image_picker/image_picker.dart';
 
 class RegisterCustomer extends StatefulWidget {
   const RegisterCustomer({super.key});
@@ -17,6 +21,8 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
+  final ImagePicker picker = ImagePicker();
+  XFile? image;
 
   @override
   Widget build(BuildContext context) {
@@ -55,17 +61,37 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                             const SizedBox(height: 10.0),
                             Center(
                               child: GestureDetector(
-                                onTap: () {
-                                  // Handle image upload here
+                                onTap: () async {
+                                  final XFile? pickedImage = await picker
+                                      .pickImage(source: ImageSource.gallery);
+                                  if (pickedImage != null) {
+                                    log(pickedImage.path);
+                                    setState(() {
+                                      image =
+                                          pickedImage; // อัปเดตค่า image ที่เลือก
+                                    });
+                                  } else {
+                                    log('No Image');
+                                  }
                                 },
                                 child: CircleAvatar(
-                                  radius: 45, // Size of the avatar
+                                  radius: 45, // ขนาดของ avatar
                                   backgroundColor: Colors.grey[300],
-                                  child: const Icon(
-                                    Icons.person,
-                                    size: 40, // Size of icon
-                                    color: Colors.white,
-                                  ),
+                                  child: image !=
+                                          null // ถ้า image มีค่า ให้แสดงรูปที่เลือกแทนไอคอน
+                                      ? ClipOval(
+                                          child: Image.file(
+                                            File(image!.path),
+                                            fit: BoxFit.cover,
+                                            width: 90,
+                                            height: 90,
+                                          ),
+                                        )
+                                      : const Icon(
+                                          Icons.person,
+                                          size: 40, // ขนาดไอคอน
+                                          color: Colors.white,
+                                        ),
                                 ),
                               ),
                             ),
@@ -122,6 +148,30 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                             const SizedBox(height: 10.0), // Spacing
                             const Text(
                               'Email',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 5.0), TextField(
+                              controller: phoneController,
+                              style:
+                                  const TextStyle(fontSize: 14.0), // Font size
+                              decoration: const InputDecoration(
+                                isDense: true,
+                                filled: true,
+                                fillColor: Colors.white,
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: 10.0,
+                                  horizontal: 8.0,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(15.0)),
+                                  borderSide: BorderSide.none,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 10.0), // Spacing
+                            const Text(
+                              'Address',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 5.0),
