@@ -1,11 +1,14 @@
 import 'package:delivery_app/config/config.dart';
+import 'package:delivery_app/model/request/RiderPostReg.dart';
+
 import 'package:delivery_app/page/Login.dart';
 import 'package:delivery_app/page/RegisterCustomer.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert'; // for jsonEncode
 import 'dart:developer'; // for log
-// Import your configuration file here
+import 'package:image_picker/image_picker.dart';
+import 'dart:io'; // สำหรับการใช้ File
 
 class RegisterRider extends StatefulWidget {
   const RegisterRider({super.key});
@@ -15,15 +18,14 @@ class RegisterRider extends StatefulWidget {
 }
 
 class _RegisterRiderState extends State<RegisterRider> {
-  final TextEditingController emailController = TextEditingController();
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController licensePlateController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
 
   String url = ''; // Initialize the URL variable
+  String profileImagePath = ''; // ตัวแปรเก็บที่อยู่ของภาพ
 
   @override
   void initState() {
@@ -37,6 +39,17 @@ class _RegisterRiderState extends State<RegisterRider> {
     });
   }
 
+  // ฟังก์ชันสำหรับเลือกภาพ
+  Future<void> pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        profileImagePath = pickedFile.path; // เก็บที่อยู่ของภาพที่เลือก
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,25 +57,22 @@ class _RegisterRiderState extends State<RegisterRider> {
         child: SingleChildScrollView(
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              maxWidth: 330.0, // Adjust maximum width of the card
+              maxWidth: 330.0,
             ),
             child: Stack(
               alignment: Alignment.topCenter,
               children: [
-                // Custom logo icon
                 Image.asset('assets/images/motorcycle_rider.png'),
                 Column(
                   children: [
                     Card(
-                      margin: const EdgeInsets.only(
-                          top: 100.0), // Margin from top for the card
+                      margin: const EdgeInsets.only(top: 100.0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20.0),
                       ),
                       elevation: 4.0,
                       child: Padding(
-                        padding: const EdgeInsets.all(
-                            20.0), // Padding inside the card
+                        padding: const EdgeInsets.all(20.0),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -70,17 +80,20 @@ class _RegisterRiderState extends State<RegisterRider> {
                             const SizedBox(height: 10.0),
                             Center(
                               child: GestureDetector(
-                                onTap: () {
-                                  // Handle image upload here
-                                },
+                                onTap: pickImage, // เรียกฟังก์ชันที่สร้างขึ้นเมื่อกด
                                 child: CircleAvatar(
-                                  radius: 45, // Size of the avatar
+                                  radius: 45,
                                   backgroundColor: Colors.grey[300],
-                                  child: const Icon(
-                                    Icons.person,
-                                    size: 40, // Size of icon
-                                    color: Colors.white,
-                                  ),
+                                  backgroundImage: profileImagePath.isNotEmpty
+                                      ? FileImage(File(profileImagePath)) // แสดงภาพที่เลือก
+                                      : null,
+                                  child: profileImagePath.isEmpty
+                                      ? const Icon(
+                                          Icons.person,
+                                          size: 40,
+                                          color: Colors.white,
+                                        )
+                                      : null,
                                 ),
                               ),
                             ),
@@ -92,8 +105,7 @@ class _RegisterRiderState extends State<RegisterRider> {
                             const SizedBox(height: 5.0),
                             TextField(
                               controller: usernameController,
-                              style:
-                                  const TextStyle(fontSize: 14.0), // Font size
+                              style: const TextStyle(fontSize: 14.0),
                               decoration: const InputDecoration(
                                 isDense: true,
                                 filled: true,
@@ -103,13 +115,12 @@ class _RegisterRiderState extends State<RegisterRider> {
                                   horizontal: 8.0,
                                 ),
                                 border: OutlineInputBorder(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(15.0)),
+                                  borderRadius: BorderRadius.all(Radius.circular(15.0)),
                                   borderSide: BorderSide.none,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 10.0), // Spacing
+                            const SizedBox(height: 10.0),
                             const Text(
                               'Phone',
                               style: TextStyle(fontWeight: FontWeight.bold),
@@ -117,8 +128,7 @@ class _RegisterRiderState extends State<RegisterRider> {
                             const SizedBox(height: 5.0),
                             TextField(
                               controller: phoneController,
-                              style:
-                                  const TextStyle(fontSize: 14.0), // Font size
+                              style: const TextStyle(fontSize: 14.0),
                               decoration: const InputDecoration(
                                 isDense: true,
                                 filled: true,
@@ -128,22 +138,20 @@ class _RegisterRiderState extends State<RegisterRider> {
                                   horizontal: 8.0,
                                 ),
                                 border: OutlineInputBorder(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(15.0)),
+                                  borderRadius: BorderRadius.all(Radius.circular(15.0)),
                                   borderSide: BorderSide.none,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 10.0), // Spacing
+                            const SizedBox(height: 10.0),
                             const Text(
-                              'Email',
+                              'License Plate',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 5.0),
                             TextField(
-                              controller: emailController,
-                              style:
-                                  const TextStyle(fontSize: 14.0), // Font size
+                              controller: licensePlateController,
+                              style: const TextStyle(fontSize: 14.0),
                               decoration: const InputDecoration(
                                 isDense: true,
                                 filled: true,
@@ -153,13 +161,12 @@ class _RegisterRiderState extends State<RegisterRider> {
                                   horizontal: 8.0,
                                 ),
                                 border: OutlineInputBorder(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(15.0)),
+                                  borderRadius: BorderRadius.all(Radius.circular(15.0)),
                                   borderSide: BorderSide.none,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 10.0), // Spacing
+                            const SizedBox(height: 10.0),
                             const Text(
                               'Password',
                               style: TextStyle(fontWeight: FontWeight.bold),
@@ -167,8 +174,7 @@ class _RegisterRiderState extends State<RegisterRider> {
                             const SizedBox(height: 5.0),
                             TextField(
                               controller: passwordController,
-                              style:
-                                  const TextStyle(fontSize: 14.0), // Font size
+                              style: const TextStyle(fontSize: 14.0),
                               decoration: const InputDecoration(
                                 isDense: true,
                                 filled: true,
@@ -178,14 +184,13 @@ class _RegisterRiderState extends State<RegisterRider> {
                                   horizontal: 8.0,
                                 ),
                                 border: OutlineInputBorder(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(15.0)),
+                                  borderRadius: BorderRadius.all(Radius.circular(15.0)),
                                   borderSide: BorderSide.none,
                                 ),
                               ),
                               obscureText: true,
                             ),
-                            const SizedBox(height: 10.0), // Spacing
+                            const SizedBox(height: 10.0),
                             const Text(
                               'Confirm Password',
                               style: TextStyle(fontWeight: FontWeight.bold),
@@ -193,8 +198,7 @@ class _RegisterRiderState extends State<RegisterRider> {
                             const SizedBox(height: 5.0),
                             TextField(
                               controller: confirmPasswordController,
-                              style:
-                                  const TextStyle(fontSize: 14.0), // Font size
+                              style: const TextStyle(fontSize: 14.0),
                               decoration: const InputDecoration(
                                 isDense: true,
                                 filled: true,
@@ -204,42 +208,33 @@ class _RegisterRiderState extends State<RegisterRider> {
                                   horizontal: 8.0,
                                 ),
                                 border: OutlineInputBorder(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(15.0)),
+                                  borderRadius: BorderRadius.all(Radius.circular(15.0)),
                                   borderSide: BorderSide.none,
                                 ),
                               ),
                               obscureText: true,
                             ),
-                            const SizedBox(height: 20.0), // Spacing
+                            const SizedBox(height: 20.0),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment
-                                  .spaceBetween, // Arrange buttons with space in between
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 ElevatedButton(
                                   onPressed: () {
-                                    // Handle back action
                                     Navigator.of(context).popUntil(
                                       (route) => route.isFirst,
-                                    ); // Navigate back to the previous screen
+                                    );
                                   },
                                   style: ButtonStyle(
-                                    backgroundColor:
-                                        WidgetStateProperty.all<Color>(
-                                      const Color.fromARGB(255, 255, 255,
-                                          255), // Color of the back button
+                                    backgroundColor: MaterialStateProperty.all<Color>(
+                                      const Color.fromARGB(255, 255, 255, 255),
                                     ),
-                                    foregroundColor:
-                                        WidgetStateProperty.all<Color>(
+                                    foregroundColor: MaterialStateProperty.all<Color>(
                                       const Color.fromRGBO(0, 253, 21, 0.62),
                                     ),
-                                    elevation:
-                                        WidgetStateProperty.all<double>(5.0),
-                                    shape:
-                                        WidgetStateProperty.all<OutlinedBorder>(
+                                    elevation: MaterialStateProperty.all<double>(5.0),
+                                    shape: MaterialStateProperty.all<OutlinedBorder>(
                                       RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                            15.0), // Round corners of button
+                                        borderRadius: BorderRadius.circular(15.0),
                                       ),
                                     ),
                                   ),
@@ -247,29 +242,19 @@ class _RegisterRiderState extends State<RegisterRider> {
                                 ),
                                 ElevatedButton(
                                   onPressed: () {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => LoginPage(),
-                                        ));
-                                    // Handle register action
+                                    registerRider();
                                   },
                                   style: ButtonStyle(
-                                    backgroundColor:
-                                        WidgetStateProperty.all<Color>(
+                                    backgroundColor: MaterialStateProperty.all<Color>(
                                       const Color.fromARGB(255, 1, 255, 98),
                                     ),
-                                    foregroundColor:
-                                        WidgetStateProperty.all<Color>(
+                                    foregroundColor: MaterialStateProperty.all<Color>(
                                       const Color.fromARGB(255, 255, 255, 255),
                                     ),
-                                    elevation:
-                                        WidgetStateProperty.all<double>(5.0),
-                                    shape:
-                                        WidgetStateProperty.all<OutlinedBorder>(
+                                    elevation: MaterialStateProperty.all<double>(5.0),
+                                    shape: MaterialStateProperty.all<OutlinedBorder>(
                                       RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                            15.0), // Round corners of button
+                                        borderRadius: BorderRadius.circular(15.0),
                                       ),
                                     ),
                                   ),
@@ -281,9 +266,7 @@ class _RegisterRiderState extends State<RegisterRider> {
                         ),
                       ),
                     ),
-                    SizedBox(
-                      height: 60,
-                    ),
+                    SizedBox(height: 60),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
@@ -292,12 +275,13 @@ class _RegisterRiderState extends State<RegisterRider> {
                           child: GestureDetector(
                             onTap: () {
                               Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => RegisterCustomer(),
-                                  ));
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => RegisterCustomer(),
+                                ),
+                              );
                             },
-                            child: Text("Create Acount Users -->"),
+                            child: Text("Create Account Users -->"),
                           ),
                         ),
                       ],
@@ -319,7 +303,7 @@ class _RegisterRiderState extends State<RegisterRider> {
         context: context,
         builder: (context) => AlertDialog(
           title: Text('Error'),
-          content: Text('API endpoint is not set. Please try again later.'),
+          content: Text('API endpoint not configured.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -331,43 +315,13 @@ class _RegisterRiderState extends State<RegisterRider> {
       return;
     }
 
-    final response = await http.post(
-      Uri.parse('$url/register'), // Use the dynamic URL
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'name': usernameController.text,
-        'phone_number': phoneController.text,
-        'license_plate': licensePlateController.text,
-        'password': passwordController.text,
-        'profile_image': '', // Implement image upload logic if needed
-      }),
-    );
-
-    if (response.statusCode == 201) {
-      // Registration successful
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Success'),
-          content: Text('Rider registered successfully!'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.pop(context); // Go back to previous screen
-              },
-              child: Text('OK'),
-            ),
-          ],
-        ),
-      );
-    } else if (response.statusCode == 409) {
-      // Phone number already exists
+    if (passwordController.text != confirmPasswordController.text) {
+      // Show an error if passwords don't match
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
           title: Text('Error'),
-          content: Text('Phone number already exists.'),
+          content: Text('Passwords do not match.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -376,13 +330,39 @@ class _RegisterRiderState extends State<RegisterRider> {
           ],
         ),
       );
+      return;
+    }
+
+    // Create the RiderPostReg object
+    RiderPostReg rider = RiderPostReg(
+      phoneNumber: phoneController.text,
+      password: passwordController.text,
+      name: usernameController.text,
+      profileImage: profileImagePath,
+      licensePlate: licensePlateController.text,
+    );
+
+    final response = await http.post(
+      Uri.parse('$url/riders'),
+      headers: {'Content-Type': 'application/json'},
+      body: riderPostRegToJson(rider), // Use the model to serialize
+    );
+
+    if (response.statusCode == 201) {
+      // Navigate to the Login page if registration is successful
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => LoginPage(),
+        ),
+      );
     } else {
-      // Some other error
+      // Show an error if registration failed
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
           title: Text('Error'),
-          content: Text('Failed to register rider. Please try again.'),
+          content: Text('Registration failed. Please try again.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
