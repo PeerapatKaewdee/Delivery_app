@@ -36,7 +36,7 @@ class _RegisterRiderState extends State<RegisterRider> {
     super.initState();
     // Read the configuration for the API endpoint
     Configuration.getConfig().then((value) {
-      log(value['apiEndpoint']);
+      // log(value['apiEndpoint']);
       setState(() {
         url = value['apiEndpoint'] ?? '';
       });
@@ -276,11 +276,7 @@ class _RegisterRiderState extends State<RegisterRider> {
                                 ),
                                 ElevatedButton(
                                   onPressed: () {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => LoginPage(),
-                                        ));
+                                    registerRider();
                                     // Handle register action
                                   },
                                   style: ButtonStyle(
@@ -342,6 +338,7 @@ class _RegisterRiderState extends State<RegisterRider> {
   }
 
   Future<void> registerRider() async {
+    log("message");
     if (url.isEmpty) {
       // Show an error if the URL is not set
       showDialog(
