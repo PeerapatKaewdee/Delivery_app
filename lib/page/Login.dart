@@ -1,12 +1,10 @@
-import 'dart:math';
-
-import 'package:delivery_app/config/config.dart';
-import 'package:delivery_app/page/RegisterCustomer.dart';
+import 'dart:convert';
 import 'package:delivery_app/page/Risers_Get.dart';
 import 'package:delivery_app/page/User_send.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:delivery_app/config/config.dart';
+import 'package:delivery_app/page/RegisterCustomer.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,9 +14,22 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   String textResLogin = "";
+  String url = '';
+  bool _obscurePassword = true; // ตัวแปรเพื่อควบคุมการเปิด/ปิดตา
+
+  @override
+  void initState() {
+    super.initState();
+    // Load the configuration to get the API URL
+    Configuration.getConfig().then((config) {
+      setState(() {
+        url = config['apiEndpoint']; // Make sure the correct URL is set
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +37,7 @@ class _LoginPageState extends State<LoginPage> {
     final isLandscape = mediaQuery.orientation == Orientation.landscape;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF04DD16), // พื้นหลังสีเขียว
+      backgroundColor: const Color(0xFF04DD16), // Green background
       body: Center(
         child: SingleChildScrollView(
           child: ConstrainedBox(
@@ -37,9 +48,8 @@ class _LoginPageState extends State<LoginPage> {
               alignment: Alignment.topCenter,
               children: [
                 Card(
-                  margin: const EdgeInsets.only(top: 200.0), // ลดระยะห่าง
-                  color: Colors.white
-                      .withOpacity(0.7), // ปรับให้โปร่งใสขึ้นเล็กน้อย
+                  margin: const EdgeInsets.only(top: 200.0),
+                  color: Colors.white.withOpacity(0.7),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20.0),
                   ),
@@ -52,12 +62,13 @@ class _LoginPageState extends State<LoginPage> {
                       children: [
                         const SizedBox(height: 10.0),
                         const Text(
-                          'Phone', // เปลี่ยนจาก 'Name' เป็น 'Phone'
+                          'Phone',
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 5.0),
                         TextField(
-                          controller: usernameController,
+                          controller: phoneController,
+                          keyboardType: TextInputType.phone,
                           decoration: const InputDecoration(
                             filled: true,
                             fillColor: Colors.white,
@@ -72,7 +83,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 30.0), // ลดระยะห่าง
+                        const SizedBox(height: 30.0),
                         const Text(
                           'Password',
                           style: TextStyle(fontWeight: FontWeight.bold),
@@ -80,20 +91,32 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(height: 5.0),
                         TextField(
                           controller: passwordController,
-                          decoration: const InputDecoration(
+                          obscureText: _obscurePassword, // ใช้ตัวแปรนี้ควบคุม
+                          decoration: InputDecoration(
                             filled: true,
                             fillColor: Colors.white,
-                            contentPadding: EdgeInsets.symmetric(
+                            contentPadding: const EdgeInsets.symmetric(
                               vertical: 0.5,
                               horizontal: 16.0,
                             ),
-                            border: OutlineInputBorder(
+                            border: const OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.all(Radius.circular(20.0)),
                               borderSide: BorderSide.none,
                             ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword; // เปลี่ยนสถานะเปิด/ปิดตา
+                                });
+                              },
+                            ),
                           ),
-                          obscureText: true,
                         ),
                         const SizedBox(height: 20.0),
                         Row(
@@ -101,42 +124,38 @@ class _LoginPageState extends State<LoginPage> {
                           children: [
                             ElevatedButton(
                               onPressed: () {
-                                // Handle back action
                                 Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => RegisterCustomer(),
-                                    ));
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => RegisterCustomer(),
+                                  ),
+                                );
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    Colors.white, // Color of the back button
+                                backgroundColor: Colors.white,
                                 foregroundColor:
                                     const Color.fromRGBO(0, 253, 21, 0.62),
                                 elevation: 5.0,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      15.0), // Round corners of button
+                                  borderRadius: BorderRadius.circular(15.0),
                                 ),
                               ),
-                              child: const Text('Sign-in'),
+                              child: const Text('Sign Up'),
                             ),
-                            const SizedBox(
-                                width: 10.0), // เพิ่มระยะห่างระหว่างปุ่ม
+                            const SizedBox(width: 10.0),
                             ElevatedButton(
                               onPressed: () {
-                                // Handle login action
                                 login();
                               },
                               style: ButtonStyle(
-                                backgroundColor: WidgetStateProperty.all<Color>(
+                                backgroundColor: MaterialStateProperty.all<Color>(
                                   const Color.fromARGB(255, 1, 255, 98),
                                 ),
-                                foregroundColor: WidgetStateProperty.all<Color>(
+                                foregroundColor: MaterialStateProperty.all<Color>(
                                   const Color.fromARGB(255, 255, 255, 255),
                                 ),
-                                elevation: WidgetStateProperty.all<double>(5.0),
-                                shape: WidgetStateProperty.all<OutlinedBorder>(
+                                elevation: MaterialStateProperty.all<double>(5.0),
+                                shape: MaterialStateProperty.all<OutlinedBorder>(
                                   RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20.0),
                                   ),
@@ -147,16 +166,19 @@ class _LoginPageState extends State<LoginPage> {
                           ],
                         ),
                         const SizedBox(height: 20.0),
-                        Text(textResLogin), // สำหรับแสดงผลลัพธ์ของการ Login
+                        Text(
+                          textResLogin,
+                          style: const TextStyle(color: Colors.red),
+                        ),
                       ],
                     ),
                   ),
                 ),
                 Positioned(
-                  top: -65.0, // ปรับตำแหน่งโลโก้ให้สูงขึ้นเล็กน้อย
+                  top: -65.0,
                   child: Image.asset(
-                    'assets/images/Logodelivery.png', // โลโก้ Delivery
-                    width: 330.0, // ขนาดโลโก้
+                    'assets/images/Logodelivery.png',
+                    width: 330.0,
                     height: 300.0,
                     fit: BoxFit.contain,
                   ),
@@ -170,38 +192,56 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void login() async {
-    var config = await Configuration.getConfig();
-    var usl = config['apiEndpoint'];
-    var model = {};
-    String debug = '';
-    int type = 1;
-    if (usernameController.text != ' ' ||
-        passwordController.text != ' ' ||
-        usernameController.text.isEmpty ||
-        passwordController.text.isEmpty) {
-      if (type == 0) {
-        http.get(Uri.parse("$usl/"));
-        Navigator.pushReplacement(
+    if (phoneController.text.isEmpty || passwordController.text.isEmpty) {
+      setState(() {
+        textResLogin = "Phone number and password cannot be empty.";
+      });
+      return;
+    }
+
+    var loginRequest = {
+      'phone_number': phoneController.text.trim(),
+      'password': passwordController.text.trim(),
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse('$url/api/auth/login'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(loginRequest),
+      );
+
+      if (response.statusCode == 200) {
+        var jsonResponse = jsonDecode(response.body);
+        int id = jsonResponse['id'];
+        String userType = jsonResponse['type'];
+
+        if (userType == 'rider') {
+          Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => UserSendPage(
-                id: 1,
-              ),
-            ));
-      } else if (type == 1) {
-        Navigator.pushReplacement(
+              builder: (context) => RidersGetPage(id: id),
+            ),
+          );
+        } else {
+          Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => RidersGetPage(),
-            ));
+              builder: (context) => UserSendPage(id: id),
+            ),
+          );
+        }
       } else {
+        print('Error response: ${response.body}');
         setState(() {
-          debug = "usernamme or password invalid !!!";
+          textResLogin = "Login failed: ${response.reasonPhrase} (${response.statusCode})";
         });
       }
-    } else {
+    } catch (e) {
       setState(() {
-        debug = "username or password in put information";
+        textResLogin = "An error occurred: $e";
       });
     }
   }
