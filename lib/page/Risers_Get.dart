@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 class RidersGetPage extends StatefulWidget {
-  const RidersGetPage({super.key});
-
+  const RidersGetPage({super.key, required id});
   @override
   State<RidersGetPage> createState() => _RidersGetPageState();
 }
@@ -131,8 +130,8 @@ class _RidersGetPageState extends State<RidersGetPage> {
   }
 }
 
-void main() {
-  runApp(const MaterialApp(
-    home: RidersGetPage(),
-  ));
-}
+// void main() {
+//   runApp(const MaterialApp(
+//     home: RidersGetPage(),
+//   ));
+// }
