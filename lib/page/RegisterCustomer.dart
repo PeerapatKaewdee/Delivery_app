@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'package:delivery_app/config/config.dart';
@@ -22,6 +23,7 @@ class RegisterCustomer extends StatefulWidget {
 
 class _RegisterCustomerState extends State<RegisterCustomer> {
   final TextEditingController phoneController = TextEditingController();
+  final TextEditingController nameCtl = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
@@ -201,6 +203,32 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                                         ),
                                 ),
                               ),
+                            ),
+                            const SizedBox(height: 10.0),
+                            const Text(
+                              'Username',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 5.0),
+                            TextField(
+                              controller: nameCtl,
+                              style:
+                                  const TextStyle(fontSize: 14.0), // Font size
+                              decoration: const InputDecoration(
+                                isDense: true,
+                                filled: true,
+                                fillColor: Colors.white,
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: 10.0,
+                                  horizontal: 8.0,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(15.0)),
+                                  borderSide: BorderSide.none,
+                                ),
+                              ),
+                              keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 10.0), // Spacing
                             const Text(
@@ -461,23 +489,152 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
 
   void _check() async {
     log('message12');
+    // แยกข้อมูล Lat และ Lng จาก addressController
+    String extractLat(String text) {
+      final latRegex = RegExp(r'Lat: ([\d\.\-]+)');
+      return latRegex.firstMatch(text)?.group(1) ?? '0.0';
+    }
+
+    String extractLng(String text) {
+      final lngRegex = RegExp(r'Lng: ([\d\.\-]+)');
+      return lngRegex.firstMatch(text)?.group(1) ?? '0.0';
+    }
+
+    final String latitude = extractLat(addressController.text); // ดึงค่า Lat
+    final String longitude = extractLng(addressController.text); // ดึงค่า Lng
+    final String pointFormat =
+        'POINT($longitude $latitude)'; // รูปแบบที่คุณต้องการ POINT(longitude latitude)
+
     var config = await Configuration.getConfig();
     var url = config['apiEndpoint'];
-    if (phoneController.text != '') {
-      if (passwordController.text != '' ||
-          confirmPasswordController.text != '') {
-        if (passwordController.text == confirmPasswordController.text) {
-          http.get(Uri.parse("$url/")).then((value) => {log(value.toString())});
-          log('3');
-          log('33');
+    if (nameCtl.text != '') {
+      if (phoneController.text != '') {
+        if (addressController.text != '') {
+          if (passwordController.text != '' ||
+              confirmPasswordController.text != '') {
+            if (passwordController.text == confirmPasswordController.text) {
+              http
+                  .post(
+                Uri.parse("$url/api/user/register"),
+                headers: {"Content-Type": "application/json; charset=utf-8"},
+                body: jsonEncode({
+                  'phone_number': phoneController.text,
+                  'password': passwordController.text,
+                  'name': nameCtl.text,
+                  'profile_image': '',
+                  'address': '',
+                  'gps_location': pointFormat
+                }),
+              )
+                  .then((value) {
+                log('message123');
+                log(addressController.text);
+                log(value.body.toString());
+                var jsonResponse = jsonDecode(value.body);
+                if (value.statusCode == 200 ||
+                    jsonResponse['message'] == "ลงทะเบียนผู้ใช้สำเร็จ") {
+                  // Registration successful
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text('Success'),
+                      content: Text('User registered successfully!'),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).popUntil(
+                              (route) => route.isFirst,
+                            );
+                          },
+                          child: Text('OK'),
+                        ),
+                      ],
+                    ),
+                  );
+                } else if (value.statusCode == 409) {
+                  // Phone number already exists
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text('Error!!!'),
+                      content: Text('Phone number already exists.'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: Text('OK'),
+                        ),
+                      ],
+                    ),
+                  );
+                } else {
+                  // Some other error
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text('Error'),
+                      content:
+                          Text('Failed to register user. Please try again.'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: Text('OK'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                log(value.body.toString());
+                log('registeUser');
+              });
+            } else {
+              log('password invalid.');
+              setState(() {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text('Error!!!!'),
+                    content: Text('Password does not match!!!!'),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: Text('OK'),
+                      ),
+                    ],
+                  ),
+                );
+              });
+            }
+          } else {
+            log('4');
+            setState(() {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text('Error!!!!'),
+                  content: Text('Password is null ,input password'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Text('OK'),
+                    ),
+                  ],
+                ),
+              );
+            });
+          }
         } else {
-          log('password invalid.');
+          log(phoneController.text);
+          log('2');
           setState(() {
             showDialog(
               context: context,
               builder: (context) => AlertDialog(
-                title: Text('Error!!!!'),
-                content: Text('Password does not match!!!!'),
+                title: Text('Error !!!'),
+                content: Text('Input Address or selete Address !!!'),
                 actions: [
                   TextButton(
                     onPressed: () {
@@ -491,13 +648,12 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
           });
         }
       } else {
-        log('4');
         setState(() {
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
-              title: Text('Error!!!!'),
-              content: Text('Password is null ,input password'),
+              title: Text('Error !!!'),
+              content: Text('Input PhoneNumber !!!'),
               actions: [
                 TextButton(
                   onPressed: () {
@@ -511,14 +667,12 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
         });
       }
     } else {
-      log(phoneController.text);
-      log('2');
       setState(() {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
             title: Text('Error !!!'),
-            content: Text('Input PhoneNumber !!!'),
+            content: Text('Input Username !!!'),
             actions: [
               TextButton(
                 onPressed: () {

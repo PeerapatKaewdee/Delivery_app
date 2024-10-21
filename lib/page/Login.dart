@@ -208,7 +208,7 @@ class _LoginPageState extends State<LoginPage> {
       final response = await http.post(
         Uri.parse('$url/api/auth/login'),
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json; charset=utf-8",
         },
         body: jsonEncode(loginRequest),
       );
