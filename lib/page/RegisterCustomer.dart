@@ -518,7 +518,7 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
           context: context,
           builder: (context) => AlertDialog(
             title: Text('Error !!!'),
-            content: Text('Input Phonenumber !!!'),
+            content: Text('Input PhoneNumber !!!'),
             actions: [
               TextButton(
                 onPressed: () {
