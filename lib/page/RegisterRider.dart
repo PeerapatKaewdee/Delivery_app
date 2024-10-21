@@ -20,7 +20,7 @@ class RegisterRider extends StatefulWidget {
 }
 
 class _RegisterRiderState extends State<RegisterRider> {
-  final TextEditingController emailController = TextEditingController();
+  final TextEditingController carController = TextEditingController();
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController licensePlateController = TextEditingController();
@@ -170,7 +170,7 @@ class _RegisterRiderState extends State<RegisterRider> {
                             ),
                             const SizedBox(height: 5.0),
                             TextField(
-                              controller: emailController,
+                              controller: carController,
                               style:
                                   const TextStyle(fontSize: 14.0), // Font size
                               decoration: const InputDecoration(
@@ -355,6 +355,101 @@ class _RegisterRiderState extends State<RegisterRider> {
         ),
       );
       return;
+    }
+    if (usernameController.text != '') {
+      if (phoneController.text != '') {
+        log("phonr is null");
+        if (carController.text != '') {
+          log("car is null");
+          if (passwordController.text != '' &&
+              confirmPasswordController.text != '') {
+            log("password invalid");
+            if (passwordController.text == confirmPasswordController.text) {
+              log("sucess");
+            } else {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text('Success'),
+                  content: Text('Rider registered successfully!'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Text('OK'),
+                    ),
+                  ],
+                ),
+              );
+            }
+          } else {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text('Success'),
+                content: Text('Rider registered successfully!'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Text('OK'),
+                  ),
+                ],
+              ),
+            );
+          }
+        } else {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('Success'),
+              content: Text('Rider registered successfully!'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('OK'),
+                ),
+              ],
+            ),
+          );
+        }
+      } else {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Success'),
+            content: Text('Rider registered successfully!'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Success'),
+          content: Text('Rider registered successfully!'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
     }
 
     final response = await http.post(
