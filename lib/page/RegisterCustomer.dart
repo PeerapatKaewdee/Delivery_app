@@ -8,9 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get_navigation/get_navigation.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_places_flutter/model/prediction.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
-// import 'package:latlong2/latlong.dart';
+import 'package:http/http.dart'
+    as http; // import 'package:latlong2/latlong.dart';
 
 class RegisterCustomer extends StatefulWidget {
   const RegisterCustomer({super.key});
@@ -26,10 +27,12 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
       TextEditingController();
   final ImagePicker picker = ImagePicker();
   XFile? image;
+
   final TextEditingController addressController = TextEditingController();
   LatLng? selectedPosition;
   GoogleMapController? mapController;
   bool isLoadingLocation = true;
+  final TextEditingController _addressController = TextEditingController();
   String debug = '';
   Future<LatLng> _getCurrentLocation() async {
     // ตรวจสอบและขอสิทธิ์การเข้าถึงตำแหน่ง
@@ -71,6 +74,61 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
+  }
+
+  // ฟังก์ชันเรียกใช้ Google Places
+  void autoCompleteSearch(String value) {
+    // ตรวจสอบว่ากำหนด Google API Key หรือยัง
+    String apiKey = 'YOUR_GOOGLE_API_KEY'; // ใส่ API Key ของคุณที่นี่
+    if (apiKey.isEmpty) {
+      log('API Key is missing!');
+      return;
+    }
+  }
+
+  // ฟังก์ชันตรวจสอบข้อมูลก่อนส่ง
+  void check() async {
+    log('message12');
+    var config = await Configuration.getConfig();
+    var url = config['apiEndpoint'];
+    if (phoneController.text != '') {
+      if (passwordController.text != '' ||
+          confirmPasswordController.text != '') {
+        if (passwordController.text == confirmPasswordController.text) {
+          http.get(Uri.parse("$url/")).then((value) => {log(value.toString())});
+          log('3');
+          log('33');
+        } else {
+          log('password invalid.');
+          _showErrorDialog('Password does not match!');
+        }
+      } else {
+        log('Password is null');
+        _showErrorDialog('Input password');
+      }
+    } else {
+      log('Phone number is empty');
+      _showErrorDialog('Input Phonenumber');
+    }
+  }
+
+  // ฟังก์ชันแสดง Error Dialog
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -171,10 +229,10 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                               keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 10.0), // Spacing
-                            const Text(
-                              'Adress',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
+                            // const Text(
+                            //   'Adress',
+                            //   style: TextStyle(fontWeight: FontWeight.bold),
+                            // ),
                             isLoadingLocation
                                 ? const CircularProgressIndicator() // แสดงการโหลดขณะรอการดึงตำแหน่ง
                                 : SingleChildScrollView(
@@ -219,6 +277,36 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                                       },
                                     ),
                                   ])),
+                            const SizedBox(height: 10.0),
+                            const Text(
+                              'Address',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 5.0),
+                            TextField(
+                              controller: _addressController,
+                              style: const TextStyle(fontSize: 14.0),
+                              decoration: const InputDecoration(
+                                isDense: true,
+                                filled: true,
+                                fillColor: Colors.white,
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: 10.0,
+                                  horizontal: 8.0,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(15.0)),
+                                  borderSide: BorderSide.none,
+                                ),
+                              ),
+                              // ใช้ Google Places สำหรับ AutoComplete
+                              onChanged: (value) {
+                                setState(() {
+                                  autoCompleteSearch(value);
+                                });
+                              },
+                            ),
                             const SizedBox(height: 10.0), // Spacing
                             const Text(
                               'Password',
@@ -310,7 +398,7 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                                 ),
                                 ElevatedButton(
                                   onPressed: () {
-                                    check();
+                                    _check();
                                     // Handle register action
                                   },
                                   style: ButtonStyle(
@@ -371,7 +459,7 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
     );
   }
 
-  void check() async {
+  void _check() async {
     log('message12');
     var config = await Configuration.getConfig();
     var url = config['apiEndpoint'];
@@ -430,7 +518,7 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
           context: context,
           builder: (context) => AlertDialog(
             title: Text('Error !!!'),
-            content: Text('Input Phonenumber !!!'),
+            content: Text('Input PhoneNumber !!!'),
             actions: [
               TextButton(
                 onPressed: () {

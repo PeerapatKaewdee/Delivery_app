@@ -337,6 +337,7 @@ class _RegisterRiderState extends State<RegisterRider> {
   }
 
   Future<void> registerRider() async {
+    log(url.toString());
     log("message");
     log(image.toString());
     if (url.isEmpty) {
@@ -358,15 +359,17 @@ class _RegisterRiderState extends State<RegisterRider> {
     }
     if (usernameController.text != '') {
       if (phoneController.text != '') {
-        log("phonr is null");
+        log("phonr");
         if (licensePlateController.text != '') {
-          log("car is null");
+          log("car");
           if (passwordController.text != '' &&
               confirmPasswordController.text != '') {
-            log("password invalid");
+            log("password");
             if (passwordController.text == confirmPasswordController.text) {
-              final response = await http.post(
-                Uri.parse('$url/register'), // Use the dynamic URL
+              log("password123");
+              http
+                  .post(
+                Uri.parse('$url/api/rider/register'), // Use the dynamic URL
                 headers: {'Content-Type': 'application/json'},
                 body: jsonEncode({
                   'name': usernameController.text,
@@ -375,65 +378,70 @@ class _RegisterRiderState extends State<RegisterRider> {
                   'password': passwordController.text,
                   'profile_image': '', // Implement image upload logic if needed
                 }),
-              );
-
-              if (response.statusCode == 201) {
-                // Registration successful
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text('Success'),
-                    content: Text('Rider registered successfully!'),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          Navigator.pop(context); // Go back to previous screen
-                        },
-                        child: Text('OK'),
-                      ),
-                    ],
-                  ),
-                );
-              } else if (response.statusCode == 409) {
-                // Phone number already exists
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text('Error'),
-                    content: Text('Phone number already exists.'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: Text('OK'),
-                      ),
-                    ],
-                  ),
-                );
-              } else {
-                // Some other error
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text('Error'),
-                    content:
-                        Text('Failed to register rider. Please try again.'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: Text('OK'),
-                      ),
-                    ],
-                  ),
-                );
-              }
-              log("sucess");
+              )
+                  .then((value) {
+                var jsonResponse = jsonDecode(value.body);
+                if (value.statusCode == 200 ||
+                    jsonResponse['message'] == "ลงทะเบียนไรเดอร์สำเร็จ") {
+                  // Registration successful
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text('Success'),
+                      content: Text('Rider registered successfully!'),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).popUntil(
+                              (route) => route.isFirst,
+                            );
+                          },
+                          child: Text('OK'),
+                        ),
+                      ],
+                    ),
+                  );
+                } else if (value.statusCode == 409) {
+                  // Phone number already exists
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text('Error!!!'),
+                      content: Text('Phone number already exists.'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: Text('OK'),
+                        ),
+                      ],
+                    ),
+                  );
+                } else {
+                  // Some other error
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text('Error'),
+                      content:
+                          Text('Failed to register rider. Please try again.'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: Text('OK'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                log(value.body.toString());
+              });
             } else {
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: Text('Success'),
-                  content: Text('Rider registered successfully!'),
+                  title: Text('Error'),
+                  content: Text(
+                      'Failed to register rider, Password does not match!!!!'),
                   actions: [
                     TextButton(
                       onPressed: () {
@@ -449,8 +457,9 @@ class _RegisterRiderState extends State<RegisterRider> {
             showDialog(
               context: context,
               builder: (context) => AlertDialog(
-                title: Text('Success'),
-                content: Text('Rider registered successfully!'),
+                title: Text('Error!!!'),
+                content: Text(
+                    'Failed to register rider. Please INput PASSWORD !!!.'),
                 actions: [
                   TextButton(
                     onPressed: () {
@@ -466,8 +475,9 @@ class _RegisterRiderState extends State<RegisterRider> {
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
-              title: Text('Success'),
-              content: Text('Rider registered successfully!'),
+              title: Text('Error!!!'),
+              content: Text(
+                  'Failed to register rider. Please Input licensePlate!!!.'),
               actions: [
                 TextButton(
                   onPressed: () {
@@ -483,8 +493,9 @@ class _RegisterRiderState extends State<RegisterRider> {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('Success'),
-            content: Text('Rider registered successfully!'),
+            title: Text('Error!!!'),
+            content: Text(
+                'Failed to register rider. Please Input PHONE NUMBER !!!.'),
             actions: [
               TextButton(
                 onPressed: () {
@@ -500,8 +511,8 @@ class _RegisterRiderState extends State<RegisterRider> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('Success'),
-          content: Text('Rider registered successfully!'),
+          title: Text('Error!!!'),
+          content: Text('Failed to register rider. Please Input Username !!!.'),
           actions: [
             TextButton(
               onPressed: () {
