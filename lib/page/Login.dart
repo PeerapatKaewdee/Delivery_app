@@ -1,10 +1,10 @@
 import 'dart:convert';
-import 'package:delivery_app/config/config.dart';
-import 'package:delivery_app/page/RegisterCustomer.dart';
 import 'package:delivery_app/page/Risers_Get.dart';
 import 'package:delivery_app/page/User_send.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:delivery_app/config/config.dart';
+import 'package:delivery_app/page/RegisterCustomer.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -193,8 +193,6 @@ class _LoginPageState extends State<LoginPage> {
       'password': passwordController.text.trim(),
     };
 
-    print('Request: ${jsonEncode(loginRequest)}'); // Debugging line
-
     try {
       final response = await http.post(
         Uri.parse('$url/api/auth/login'), // Use the correct API URL
@@ -204,37 +202,37 @@ class _LoginPageState extends State<LoginPage> {
         body: jsonEncode(loginRequest),
       );
 
-      print('Response status: ${response.statusCode}'); // Debugging line
-      print('Response body: ${response.body}'); // Debugging line
-
       if (response.statusCode == 200) {
         var jsonResponse = jsonDecode(response.body);
         int id = jsonResponse['id']; // Extract the ID from the response
-        String userType = jsonResponse['type'];
+        String userType = jsonResponse['type']; // Extract the user type
 
-        if (userType == 'user') {
+        // Navigate to the appropriate page based on user type
+        if (userType == 'rider') {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => UserSendPage(id: id), // Pass user ID
+              builder: (context) => RidersGetPage(id: id), // Navigate to RidersGet page
             ),
           );
-        } else if (userType == 'rider') {
+        } else {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => RidersGetPage(id: id), // Pass rider ID
+              builder: (context) => UserSendPage(id: id), // Navigate to UserSend page
             ),
           );
         }
       } else {
+        // Print response body for debugging
+        print('Error response: ${response.body}');
         setState(() {
-          textResLogin = "Invalid credentials. Please try again.";
+          textResLogin = "Login failed: ${response.reasonPhrase} (${response.statusCode})"; // Show specific message with status code
         });
       }
     } catch (e) {
       setState(() {
-        textResLogin = "An error occurred: $e";
+        textResLogin = "An error occurred: $e"; // Show error
       });
     }
   }
