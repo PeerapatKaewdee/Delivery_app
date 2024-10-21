@@ -1,9 +1,13 @@
+import 'package:delivery_app/config/config.dart';
 import 'package:flutter/material.dart';
 import 'package:delivery_app/page/User_Map.dart'; // Import UserMapPage
 import 'package:delivery_app/page/User_List.dart'; // Import UserListPage
+import 'package:http/http.dart' as http; // Import HTTP package for API calls
+import 'dart:convert'; // For JSON encoding/decoding
 
 class UserSendPage extends StatefulWidget {
-  const UserSendPage({super.key, required id});
+  final int userId; // Pass userId from login
+  const UserSendPage({super.key, required this.userId});
 
   @override
   State<UserSendPage> createState() => _UserSendPageState();
@@ -12,19 +16,48 @@ class UserSendPage extends StatefulWidget {
 class _UserSendPageState extends State<UserSendPage> {
   final TextEditingController _receiverPhoneController = TextEditingController();
   final TextEditingController _itemDetailsController = TextEditingController();
-
+  
   int _selectedIndex = 0; // Store the status of Bottom Navigation
+  String url = ''; // API endpoint
 
-  void _createDelivery() {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch configuration for API endpoint
+    Configuration.getConfig().then((config) {
+      setState(() {
+        url = config['apiEndpoint']; // Initialize the URL for API requests
+      });
+    });
+  }
+
+  void _createDelivery() async {
     String receiverPhone = _receiverPhoneController.text;
     String itemDetails = _itemDetailsController.text;
 
     if (receiverPhone.isNotEmpty && itemDetails.isNotEmpty) {
-      print('Receiver Phone: $receiverPhone');
-      print('Item Details: $itemDetails');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('สร้างรายการส่งสินค้าสำเร็จ!')),
+      // API call to create a shipment
+      final response = await http.post(
+        Uri.parse('$url/shipments'), // Replace with your API endpoint
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'sender_id': widget.userId, // Use userId from login
+          'receiver_phone': receiverPhone, // Send receiver's phone
+          'item_details': itemDetails, // Send item details
+        }),
       );
+
+      if (response.statusCode == 200) {
+        // Successfully created shipment
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('สร้างรายการส่งสินค้าสำเร็จ!')),
+        );
+      } else {
+        // Handle server error
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('เกิดข้อผิดพลาดในการสร้างรายการส่งสินค้า')),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วน')),
@@ -90,6 +123,7 @@ class _UserSendPageState extends State<UserSendPage> {
                     border: OutlineInputBorder(
                       borderSide: BorderSide.none,
                     ),
+                    hintText: 'หมายเลขโทรศัพท์ผู้รับ',
                   ),
                   keyboardType: TextInputType.phone,
                 ),
@@ -106,7 +140,7 @@ class _UserSendPageState extends State<UserSendPage> {
               ),
               const SizedBox(height: 16),
               const Text(
-                'สร้างรายการส่งสินค้า',
+                'รายละเอียดสินค้าที่จะส่ง',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
@@ -130,6 +164,7 @@ class _UserSendPageState extends State<UserSendPage> {
                     border: OutlineInputBorder(
                       borderSide: BorderSide.none,
                     ),
+                    hintText: 'รายละเอียดสินค้า',
                   ),
                   maxLines: 3,
                 ),
