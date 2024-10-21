@@ -20,7 +20,6 @@ class RegisterRider extends StatefulWidget {
 }
 
 class _RegisterRiderState extends State<RegisterRider> {
-  final TextEditingController carController = TextEditingController();
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController licensePlateController = TextEditingController();
@@ -31,6 +30,8 @@ class _RegisterRiderState extends State<RegisterRider> {
   String url = ''; // Initialize the URL variable
   LatLng? selectedLocation;
   String address = '';
+  final ImagePicker picker = ImagePicker();
+  XFile? image;
   @override
   void initState() {
     super.initState();
@@ -45,8 +46,6 @@ class _RegisterRiderState extends State<RegisterRider> {
 
   @override
   Widget build(BuildContext context) {
-    final ImagePicker picker = ImagePicker();
-    XFile? image;
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
@@ -170,7 +169,7 @@ class _RegisterRiderState extends State<RegisterRider> {
                             ),
                             const SizedBox(height: 5.0),
                             TextField(
-                              controller: carController,
+                              controller: licensePlateController,
                               style:
                                   const TextStyle(fontSize: 14.0), // Font size
                               decoration: const InputDecoration(
@@ -339,6 +338,7 @@ class _RegisterRiderState extends State<RegisterRider> {
 
   Future<void> registerRider() async {
     log("message");
+    log(image.toString());
     if (url.isEmpty) {
       // Show an error if the URL is not set
       showDialog(
@@ -359,12 +359,74 @@ class _RegisterRiderState extends State<RegisterRider> {
     if (usernameController.text != '') {
       if (phoneController.text != '') {
         log("phonr is null");
-        if (carController.text != '') {
+        if (licensePlateController.text != '') {
           log("car is null");
           if (passwordController.text != '' &&
               confirmPasswordController.text != '') {
             log("password invalid");
             if (passwordController.text == confirmPasswordController.text) {
+              final response = await http.post(
+                Uri.parse('$url/register'), // Use the dynamic URL
+                headers: {'Content-Type': 'application/json'},
+                body: jsonEncode({
+                  'name': usernameController.text,
+                  'phone_number': phoneController.text,
+                  'license_plate': licensePlateController.text,
+                  'password': passwordController.text,
+                  'profile_image': '', // Implement image upload logic if needed
+                }),
+              );
+
+              if (response.statusCode == 201) {
+                // Registration successful
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text('Success'),
+                    content: Text('Rider registered successfully!'),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          Navigator.pop(context); // Go back to previous screen
+                        },
+                        child: Text('OK'),
+                      ),
+                    ],
+                  ),
+                );
+              } else if (response.statusCode == 409) {
+                // Phone number already exists
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text('Error'),
+                    content: Text('Phone number already exists.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text('OK'),
+                      ),
+                    ],
+                  ),
+                );
+              } else {
+                // Some other error
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text('Error'),
+                    content:
+                        Text('Failed to register rider. Please try again.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text('OK'),
+                      ),
+                    ],
+                  ),
+                );
+              }
               log("sucess");
             } else {
               showDialog(
@@ -445,68 +507,6 @@ class _RegisterRiderState extends State<RegisterRider> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('OK'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    final response = await http.post(
-      Uri.parse('$url/register'), // Use the dynamic URL
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'name': usernameController.text,
-        'phone_number': phoneController.text,
-        'license_plate': licensePlateController.text,
-        'password': passwordController.text,
-        'profile_image': '', // Implement image upload logic if needed
-      }),
-    );
-
-    if (response.statusCode == 201) {
-      // Registration successful
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Success'),
-          content: Text('Rider registered successfully!'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.pop(context); // Go back to previous screen
-              },
-              child: Text('OK'),
-            ),
-          ],
-        ),
-      );
-    } else if (response.statusCode == 409) {
-      // Phone number already exists
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Error'),
-          content: Text('Phone number already exists.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('OK'),
-            ),
-          ],
-        ),
-      );
-    } else {
-      // Some other error
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Error'),
-          content: Text('Failed to register rider. Please try again.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
               child: Text('OK'),
             ),
           ],
