@@ -273,7 +273,7 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                               obscureText: true,
                               // keyboardType: TextInputType.number,
                             ),
-                            Text(debug),
+                            // Text(debug),
                             const SizedBox(height: 20.0),
                             Row(
                               mainAxisAlignment: MainAxisAlignment
@@ -385,20 +385,62 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
         } else {
           log('password invalid.');
           setState(() {
-            debug = "password invalid.";
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text('Error!!!!'),
+                content: Text('Password does not match!!!!'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Text('OK'),
+                  ),
+                ],
+              ),
+            );
           });
         }
       } else {
         log('4');
         setState(() {
-          debug = "password invalid";
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('Error!!!!'),
+              content: Text('Password is null ,input password'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('OK'),
+                ),
+              ],
+            ),
+          );
         });
       }
     } else {
       log(phoneController.text);
       log('2');
       setState(() {
-        debug = "input Phone Pls.";
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Error !!!'),
+            content: Text('Input Phonenumber !!!'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK'),
+              ),
+            ],
+          ),
+        );
       });
     }
   }
