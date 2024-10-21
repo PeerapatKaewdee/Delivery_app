@@ -18,6 +18,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController passwordController = TextEditingController();
   String textResLogin = "";
   String url = '';
+  bool _obscurePassword = true; // ตัวแปรเพื่อควบคุมการเปิด/ปิดตา
 
   @override
   void initState() {
@@ -90,18 +91,30 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(height: 5.0),
                         TextField(
                           controller: passwordController,
-                          obscureText: true,
-                          decoration: const InputDecoration(
+                          obscureText: _obscurePassword, // ใช้ตัวแปรนี้ควบคุม
+                          decoration: InputDecoration(
                             filled: true,
                             fillColor: Colors.white,
-                            contentPadding: EdgeInsets.symmetric(
+                            contentPadding: const EdgeInsets.symmetric(
                               vertical: 0.5,
                               horizontal: 16.0,
                             ),
-                            border: OutlineInputBorder(
+                            border: const OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.all(Radius.circular(20.0)),
                               borderSide: BorderSide.none,
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword; // เปลี่ยนสถานะเปิด/ปิดตา
+                                });
+                              },
                             ),
                           ),
                         ),
@@ -111,7 +124,6 @@ class _LoginPageState extends State<LoginPage> {
                           children: [
                             ElevatedButton(
                               onPressed: () {
-                                // Navigate to the registration page
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -128,12 +140,11 @@ class _LoginPageState extends State<LoginPage> {
                                   borderRadius: BorderRadius.circular(15.0),
                                 ),
                               ),
-                              child: const Text('Sign Up'), // Registration button
+                              child: const Text('Sign Up'),
                             ),
                             const SizedBox(width: 10.0),
                             ElevatedButton(
                               onPressed: () {
-                                // Handle login action
                                 login();
                               },
                               style: ButtonStyle(
@@ -157,7 +168,7 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(height: 20.0),
                         Text(
                           textResLogin,
-                          style: const TextStyle(color: Colors.red), // Show login response in red
+                          style: const TextStyle(color: Colors.red),
                         ),
                       ],
                     ),
@@ -195,7 +206,7 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('$url/api/auth/login'), // Use the correct API URL
+        Uri.parse('$url/api/auth/login'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -204,35 +215,33 @@ class _LoginPageState extends State<LoginPage> {
 
       if (response.statusCode == 200) {
         var jsonResponse = jsonDecode(response.body);
-        int id = jsonResponse['id']; // Extract the ID from the response
-        String userType = jsonResponse['type']; // Extract the user type
+        int id = jsonResponse['id'];
+        String userType = jsonResponse['type'];
 
-        // Navigate to the appropriate page based on user type
         if (userType == 'rider') {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => RidersGetPage(id: id), // Navigate to RidersGet page
+              builder: (context) => RidersGetPage(id: id),
             ),
           );
         } else {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => UserSendPage(id: id), // Navigate to UserSend page
+              builder: (context) => UserSendPage(id: id),
             ),
           );
         }
       } else {
-        // Print response body for debugging
         print('Error response: ${response.body}');
         setState(() {
-          textResLogin = "Login failed: ${response.reasonPhrase} (${response.statusCode})"; // Show specific message with status code
+          textResLogin = "Login failed: ${response.reasonPhrase} (${response.statusCode})";
         });
       }
     } catch (e) {
       setState(() {
-        textResLogin = "An error occurred: $e"; // Show error
+        textResLogin = "An error occurred: $e";
       });
     }
   }
