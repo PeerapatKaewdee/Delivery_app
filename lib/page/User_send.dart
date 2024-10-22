@@ -16,9 +16,10 @@ class UserSendPage extends StatefulWidget {
 class _UserSendPageState extends State<UserSendPage> {
   final TextEditingController _receiverPhoneController = TextEditingController();
   final TextEditingController _itemDetailsController = TextEditingController();
+  List<Map<String, dynamic>> _searchResults = []; // List to hold search results
+  String url = ''; // Variable to hold the API endpoint
 
   int _selectedIndex = 0; // Store the status of Bottom Navigation
-  String url = ''; // Variable to hold the API endpoint
 
   @override
   void initState() {
@@ -29,6 +30,42 @@ class _UserSendPageState extends State<UserSendPage> {
         url = config['apiEndpoint']; // Set the API endpoint
       });
     });
+  }
+
+  Future<void> _searchUser() async {
+    final phoneNumber = _receiverPhoneController.text;
+    if (phoneNumber.isNotEmpty) {
+      final response = await http.post(
+        Uri.parse('$url/search-user'), // Change to POST
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, dynamic>{
+          'phone': phoneNumber, // Send phone number in the request body
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonResponse = jsonDecode(response.body);
+        setState(() {
+          _searchResults = jsonResponse
+              .map((user) => {
+                    'receiver_id': user['receiver_id'],
+                    'receiver_name': user['receiver_name'],
+                    'receiver_phone': user['receiver_phone'], // Add phone number to the results
+                  })
+              .toList();
+        });
+      } else {
+        setState(() {
+          _searchResults = []; // Clear results if an error occurs
+        });
+      }
+    } else {
+      setState(() {
+        _searchResults = []; // Clear results if phone number is empty
+      });
+    }
   }
 
   Future<void> _createDelivery() async {
@@ -63,6 +100,7 @@ class _UserSendPageState extends State<UserSendPage> {
         // Clear inputs after successful creation
         _receiverPhoneController.clear();
         _itemDetailsController.clear();
+        _searchResults = []; // Clear search results
       } else {
         // Handle error based on response
         String errorMessage = 'เกิดข้อผิดพลาดในการสร้างรายการ';
@@ -113,7 +151,7 @@ class _UserSendPageState extends State<UserSendPage> {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const Text(
@@ -144,6 +182,38 @@ class _UserSendPageState extends State<UserSendPage> {
                     hintText: 'หมายเลขโทรศัพท์ผู้รับ (ไม่บังคับ)',
                   ),
                   keyboardType: TextInputType.phone,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                onPressed: _searchUser,
+                child: const Text('ค้นหา'),
+              ),
+              const SizedBox(height: 16),
+              // List of search results
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _searchResults.length,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      title: Text(_searchResults[index]['receiver_name']),
+                      subtitle: Text(_searchResults[index]['receiver_phone']),
+                      onTap: () {
+                        // Check if the selected user is the sender
+                        if (_searchResults[index]['receiver_id'] == widget.id) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('ไม่สามารถส่งของให้ตนเอง')),
+                          );
+                        } else {
+                          // Set selected receiver
+                          _receiverPhoneController.text = _searchResults[index]['receiver_phone'] ?? '';
+                          setState(() {
+                            _searchResults = []; // Clear results after selection
+                          });
+                        }
+                      },
+                    );
+                  },
                 ),
               ),
               const SizedBox(height: 8),
@@ -201,17 +271,10 @@ class _UserSendPageState extends State<UserSendPage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.receipt),
-            label: 'รายการรับ',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'โปรไฟล์',
+            label: 'ประวัติ',
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
-        showUnselectedLabels: true,
         onTap: _onItemTapped,
       ),
     );
