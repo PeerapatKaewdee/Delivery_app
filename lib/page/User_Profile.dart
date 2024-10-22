@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 
-class UserProfilePage extends StatefulWidget {
-  const UserProfilePage({super.key});
+class UserProfilePage extends StatelessWidget {
+  const UserProfilePage({Key? key}) : super(key: key);
 
-  @override
-  State<UserProfilePage> createState() => _UserProfilePageState();
-}
-
-class _UserProfilePageState extends State<UserProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
-      body: Column(),
+      appBar: AppBar(
+        title: const Text('โปรไฟล์ผู้ใช้'),
+      ),
+      body: Center(
+        child: const Text(
+          'นี่คือหน้าประวัติส่วนตัว',
+          style: TextStyle(fontSize: 24),
+        ),
+      ),
     );
   }
 }
