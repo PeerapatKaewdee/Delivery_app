@@ -2,12 +2,12 @@ import 'package:delivery_app/config/config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:delivery_app/page/User_Map.dart'; // Import UserMapPage
-import 'package:delivery_app/page/User_List.dart'; // Import UserListPage
+import 'package:delivery_app/page/User_Map.dart';
+import 'package:delivery_app/page/User_List.dart';
 
 class UserSendPage extends StatefulWidget {
   const UserSendPage({super.key, required this.id});
-  final int id; // Assume this id is the user ID from login
+  final int id;
 
   @override
   State<UserSendPage> createState() => _UserSendPageState();
@@ -16,93 +16,98 @@ class UserSendPage extends StatefulWidget {
 class _UserSendPageState extends State<UserSendPage> {
   final TextEditingController _receiverPhoneController = TextEditingController();
   final TextEditingController _itemDetailsController = TextEditingController();
-  List<Map<String, dynamic>> _searchResults = []; // List to hold search results
-  String url = ''; // Variable to hold the API endpoint
-
-  int _selectedIndex = 0; // Store the status of Bottom Navigation
+  List<Map<String, dynamic>> _searchResults = [];
+  String url = '';
+  int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    // Load the API configuration
     Configuration.getConfig().then((config) {
       setState(() {
-        url = config['apiEndpoint']; // Set the API endpoint
+        url = config['apiEndpoint'];
       });
     });
   }
 
   Future<void> _searchUser() async {
-    final phoneNumber = _receiverPhoneController.text;
+    final phoneNumber = _receiverPhoneController.text.trim();
     if (phoneNumber.isNotEmpty) {
-      final response = await http.post(
-        Uri.parse('$url/search-user'), // Change to POST
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, dynamic>{
-          'phone': phoneNumber, // Send phone number in the request body
-        }),
-      );
+      try {
+        final response = await http.post(
+          Uri.parse('$url/search-user'),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode(<String, dynamic>{
+            'phone': phoneNumber,
+            'user_id': widget.id,
+          }),
+        );
 
-      if (response.statusCode == 200) {
-        final List<dynamic> jsonResponse = jsonDecode(response.body);
-        setState(() {
-          _searchResults = jsonResponse
-              .map((user) => {
-                    'receiver_id': user['receiver_id'],
-                    'receiver_name': user['receiver_name'],
-                    'receiver_phone': user['receiver_phone'], // Add phone number to the results
-                  })
-              .toList();
-        });
-      } else {
-        setState(() {
-          _searchResults = []; // Clear results if an error occurs
-        });
+        if (response.statusCode == 200) {
+          final List<dynamic> jsonResponse = jsonDecode(response.body);
+          setState(() {
+            _searchResults = jsonResponse.map((user) {
+              return {
+                'receiver_id': user['receiver_id'],
+                'receiver_name': user['receiver_name'],
+                'receiver_phone': user['receiver_phone'],
+                'is_self': user['receiver_id'] == widget.id,
+              };
+            }).toList();
+          });
+        } else {
+          setState(() {
+            _searchResults = [];
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${response.body}')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('เกิดข้อผิดพลาดในการค้นหา')),
+        );
       }
     } else {
       setState(() {
-        _searchResults = []; // Clear results if phone number is empty
+        _searchResults = [];
       });
     }
   }
 
   Future<void> _createDelivery() async {
-    String itemDetails = _itemDetailsController.text;
+    String itemDetails = _itemDetailsController.text.trim();
 
-    // Check that item details are provided
     if (itemDetails.isNotEmpty) {
       final response = await http.post(
-        Uri.parse('$url/create-delivery'), // Use the dynamic URL
+        Uri.parse('$url/create-delivery'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: jsonEncode(<String, dynamic>{
-          'sender_id': widget.id, // Include sender ID
+          'sender_id': widget.id,
           'receiver_phone': _receiverPhoneController.text.isNotEmpty
               ? _receiverPhoneController.text
-              : null, // Optionally include receiver phone
+              : null,
           'items': [
             {
               'description': itemDetails,
-              'image': null, // You can add image URL if needed
+              'image': null,
             },
           ],
         }),
       );
 
       if (response.statusCode == 201) {
-        // Delivery created successfully
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('สร้างรายการส่งสินค้าสำเร็จ!')),
         );
-        // Clear inputs after successful creation
         _receiverPhoneController.clear();
         _itemDetailsController.clear();
-        _searchResults = []; // Clear search results
+        _searchResults = [];
       } else {
-        // Handle error based on response
         String errorMessage = 'เกิดข้อผิดพลาดในการสร้างรายการ';
         try {
           final Map<String, dynamic> errorResponse = jsonDecode(response.body);
@@ -110,7 +115,7 @@ class _UserSendPageState extends State<UserSendPage> {
             errorMessage = errorResponse['message'];
           }
         } catch (e) {
-          // Handle JSON decoding error if necessary
+          // Handle JSON parse error
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),
@@ -190,28 +195,29 @@ class _UserSendPageState extends State<UserSendPage> {
                 child: const Text('ค้นหา'),
               ),
               const SizedBox(height: 16),
-              // List of search results
               Expanded(
                 child: ListView.builder(
                   itemCount: _searchResults.length,
                   itemBuilder: (context, index) {
-                    return ListTile(
-                      title: Text(_searchResults[index]['receiver_name']),
-                      subtitle: Text(_searchResults[index]['receiver_phone']),
-                      onTap: () {
-                        // Check if the selected user is the sender
-                        if (_searchResults[index]['receiver_id'] == widget.id) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('ไม่สามารถส่งของให้ตนเอง')),
-                          );
-                        } else {
-                          // Set selected receiver
-                          _receiverPhoneController.text = _searchResults[index]['receiver_phone'] ?? '';
-                          setState(() {
-                            _searchResults = []; // Clear results after selection
-                          });
-                        }
-                      },
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: ListTile(
+                        title: Text(_searchResults[index]['receiver_name']),
+                        subtitle: Text(_searchResults[index]['receiver_phone']),
+                        onTap: () {
+                          if (_searchResults[index]['is_self']) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('นี่คือเบอร์ของคุณ')),
+                            );
+                          } else {
+                            _receiverPhoneController.text =
+                                _searchResults[index]['receiver_phone'] ?? '';
+                            setState(() {
+                              _searchResults = [];
+                            });
+                          }
+                        },
+                      ),
                     );
                   },
                 ),
