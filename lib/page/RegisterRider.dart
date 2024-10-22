@@ -370,7 +370,7 @@ class _RegisterRiderState extends State<RegisterRider> {
               http
                   .post(
                 Uri.parse('$url/api/rider/register'), // Use the dynamic URL
-                headers: {'Content-Type': 'application/json'},
+                headers: {"Content-Type": "application/json; charset=utf-8"},
                 body: jsonEncode({
                   'name': usernameController.text,
                   'phone_number': phoneController.text,
