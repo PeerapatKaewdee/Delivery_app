@@ -1,13 +1,13 @@
 import 'package:delivery_app/config/config.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:delivery_app/page/User_Map.dart'; // Import UserMapPage
 import 'package:delivery_app/page/User_List.dart'; // Import UserListPage
-import 'package:http/http.dart' as http; // Import HTTP package for API calls
-import 'dart:convert'; // For JSON encoding/decoding
 
 class UserSendPage extends StatefulWidget {
-  final int userId; // Pass userId from login
-  const UserSendPage({super.key, required this.userId});
+  const UserSendPage({super.key, required this.id});
+  final int id; // Assume this id is the user ID from login
 
   @override
   State<UserSendPage> createState() => _UserSendPageState();
@@ -16,51 +16,71 @@ class UserSendPage extends StatefulWidget {
 class _UserSendPageState extends State<UserSendPage> {
   final TextEditingController _receiverPhoneController = TextEditingController();
   final TextEditingController _itemDetailsController = TextEditingController();
-  
+
   int _selectedIndex = 0; // Store the status of Bottom Navigation
-  String url = ''; // API endpoint
+  String url = ''; // Variable to hold the API endpoint
 
   @override
   void initState() {
     super.initState();
-    // Fetch configuration for API endpoint
+    // Load the API configuration
     Configuration.getConfig().then((config) {
       setState(() {
-        url = config['apiEndpoint']; // Initialize the URL for API requests
+        url = config['apiEndpoint']; // Set the API endpoint
       });
     });
   }
 
-  void _createDelivery() async {
-    String receiverPhone = _receiverPhoneController.text;
+  Future<void> _createDelivery() async {
     String itemDetails = _itemDetailsController.text;
 
-    if (receiverPhone.isNotEmpty && itemDetails.isNotEmpty) {
-      // API call to create a shipment
+    // Check that item details are provided
+    if (itemDetails.isNotEmpty) {
       final response = await http.post(
-        Uri.parse('$url/shipments'), // Replace with your API endpoint
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'sender_id': widget.userId, // Use userId from login
-          'receiver_phone': receiverPhone, // Send receiver's phone
-          'item_details': itemDetails, // Send item details
+        Uri.parse('$url/create-delivery'), // Use the dynamic URL
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, dynamic>{
+          'sender_id': widget.id, // Include sender ID
+          'receiver_phone': _receiverPhoneController.text.isNotEmpty
+              ? _receiverPhoneController.text
+              : null, // Optionally include receiver phone
+          'items': [
+            {
+              'description': itemDetails,
+              'image': null, // You can add image URL if needed
+            },
+          ],
         }),
       );
 
-      if (response.statusCode == 200) {
-        // Successfully created shipment
+      if (response.statusCode == 201) {
+        // Delivery created successfully
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('สร้างรายการส่งสินค้าสำเร็จ!')),
         );
+        // Clear inputs after successful creation
+        _receiverPhoneController.clear();
+        _itemDetailsController.clear();
       } else {
-        // Handle server error
+        // Handle error based on response
+        String errorMessage = 'เกิดข้อผิดพลาดในการสร้างรายการ';
+        try {
+          final Map<String, dynamic> errorResponse = jsonDecode(response.body);
+          if (errorResponse['message'] != null) {
+            errorMessage = errorResponse['message'];
+          }
+        } catch (e) {
+          // Handle JSON decoding error if necessary
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('เกิดข้อผิดพลาดในการสร้างรายการส่งสินค้า')),
+          SnackBar(content: Text(errorMessage)),
         );
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วน')),
+        const SnackBar(content: Text('กรุณากรอกรายละเอียดสินค้า')),
       );
     }
   }
@@ -71,13 +91,11 @@ class _UserSendPageState extends State<UserSendPage> {
     });
 
     if (index == 1) {
-      // Navigate to UserMapPage for "รายการส่ง"
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const UserMapPage()),
       );
     } else if (index == 2) {
-      // Navigate to UserListPage for "รายการรับ"
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const UserListPage()),
@@ -99,7 +117,7 @@ class _UserSendPageState extends State<UserSendPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const Text(
-                'ค้นหาผู้รับ',
+                'ค้นหาผู้รับ (ไม่บังคับ)',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
@@ -123,24 +141,14 @@ class _UserSendPageState extends State<UserSendPage> {
                     border: OutlineInputBorder(
                       borderSide: BorderSide.none,
                     ),
-                    hintText: 'หมายเลขโทรศัพท์ผู้รับ',
+                    hintText: 'หมายเลขโทรศัพท์ผู้รับ (ไม่บังคับ)',
                   ),
                   keyboardType: TextInputType.phone,
                 ),
               ),
               const SizedBox(height: 8),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                ),
-                onPressed: () {
-                  // Add search receiver functionality here
-                },
-                child: const Text('ค้นหาผู้รับ'),
-              ),
-              const SizedBox(height: 16),
               const Text(
-                'รายละเอียดสินค้าที่จะส่ง',
+                'สร้างรายการส่งสินค้า',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
@@ -188,7 +196,7 @@ class _UserSendPageState extends State<UserSendPage> {
             label: 'หน้าแรก',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.move_to_inbox), // Icon for Delivery List
+            icon: Icon(Icons.move_to_inbox),
             label: 'รายการส่ง',
           ),
           BottomNavigationBarItem(
@@ -200,11 +208,11 @@ class _UserSendPageState extends State<UserSendPage> {
             label: 'โปรไฟล์',
           ),
         ],
-        currentIndex: _selectedIndex, // Set default status
+        currentIndex: _selectedIndex,
         selectedItemColor: Colors.blue,
         unselectedItemColor: Colors.grey,
         showUnselectedLabels: true,
-        onTap: _onItemTapped, // Add onTap function
+        onTap: _onItemTapped,
       ),
     );
   }
