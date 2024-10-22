@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:delivery_app/page/User_Map.dart';
 import 'package:delivery_app/page/User_List.dart';
-import 'package:delivery_app/page/User_Profile.dart'; // นำเข้าหน้านี้
+import 'package:delivery_app/page/User_Profile.dart';
 
 class UserSendPage extends StatefulWidget {
   const UserSendPage({super.key, required this.id});
@@ -19,9 +19,9 @@ class _UserSendPageState extends State<UserSendPage> {
   final TextEditingController _itemDetailsController = TextEditingController();
   List<Map<String, dynamic>> _searchResults = [];
   String url = '';
-  int _selectedIndex = 0;
+  int _selectedIndex = 0; // ตั้งค่าเริ่มต้นให้ไฮไลต์ที่หน้าแรก
   Map<String, dynamic>? _selectedReceiver;
-  List<Map<String, dynamic>> _deliveries = []; // รายการจัดส่ง
+  List<Map<String, dynamic>> _deliveries = [];
 
   @override
   void initState() {
@@ -105,7 +105,6 @@ class _UserSendPageState extends State<UserSendPage> {
       );
 
       if (response.statusCode == 201) {
-        // เพิ่มรายการส่งสินค้าไปยังรายการที่สร้างขึ้น
         setState(() {
           _deliveries.add({
             'description': itemDetails,
@@ -119,7 +118,7 @@ class _UserSendPageState extends State<UserSendPage> {
         _receiverPhoneController.clear();
         _itemDetailsController.clear();
         _searchResults = [];
-        _selectedReceiver = null; // Reset selected receiver
+        _selectedReceiver = null;
       } else {
         String errorMessage = 'เกิดข้อผิดพลาดในการสร้างรายการ';
         try {
@@ -146,7 +145,12 @@ class _UserSendPageState extends State<UserSendPage> {
       _selectedIndex = index;
     });
 
-    if (index == 1) {
+    if (index == 0) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const UserSendPage(id: 1)),
+      );
+    } else if (index == 1) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const UserMapPage()),
@@ -156,7 +160,7 @@ class _UserSendPageState extends State<UserSendPage> {
         context,
         MaterialPageRoute(builder: (context) => const UserListPage()),
       );
-    } else if (index == 3) { // ถ้าเลือกที่ UserProfilePage
+    } else if (index == 3) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const UserProfilePage()),
@@ -168,7 +172,7 @@ class _UserSendPageState extends State<UserSendPage> {
     setState(() {
       _selectedReceiver = receiver;
       _receiverPhoneController.text = receiver['receiver_phone'] ?? '';
-      _searchResults = []; // Clear search results
+      _searchResults = [];
     });
   }
 
@@ -186,7 +190,7 @@ class _UserSendPageState extends State<UserSendPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const Text(
-                'ค้นหาผู้รับ (ไม่บังคับ)',
+                'ค้นหาผู้รับ',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
@@ -210,7 +214,7 @@ class _UserSendPageState extends State<UserSendPage> {
                     border: OutlineInputBorder(
                       borderSide: BorderSide.none,
                     ),
-                    hintText: 'หมายเลขโทรศัพท์ผู้รับ (ไม่บังคับ)',
+                    hintText: 'หมายเลขโทรศัพท์ผู้รับ',
                   ),
                   keyboardType: TextInputType.phone,
                 ),
@@ -292,7 +296,27 @@ class _UserSendPageState extends State<UserSendPage> {
               const SizedBox(height: 8),
               ElevatedButton(
                 onPressed: _createDelivery,
-                child: const Text('สร้างรายการส่งสินค้า'),
+                child: const Text('สร้างรายการ'),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'รายการส่งสินค้า:',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _deliveries.length,
+                  itemBuilder: (context, index) {
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: ListTile(
+                        title: Text(_deliveries[index]['description']),
+                        subtitle: Text(
+                            'ผู้รับ: ${_deliveries[index]['receiver_name']} - โทร: ${_deliveries[index]['receiver_phone']}'),
+                      ),
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -305,12 +329,12 @@ class _UserSendPageState extends State<UserSendPage> {
             label: 'หน้าแรก',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.map),
-            label: 'แผนที่',
+            icon: Icon(Icons.move_to_inbox),
+            label: 'รายการส่ง',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.list),
-            label: 'รายการ',
+            icon: Icon(Icons.receipt),
+            label: 'รายการรับ',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
@@ -318,6 +342,10 @@ class _UserSendPageState extends State<UserSendPage> {
           ),
         ],
         currentIndex: _selectedIndex,
+        selectedItemColor: Theme.of(context).primaryColor,
+        unselectedItemColor: Colors.black,
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
         onTap: _onItemTapped,
       ),
     );

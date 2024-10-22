@@ -1,3 +1,4 @@
+import 'package:delivery_app/page/User_Profile.dart';
 import 'package:delivery_app/page/User_send.dart';
 import 'package:delivery_app/page/User_list.dart'; // Import UserListPage
 import 'package:flutter/material.dart';
@@ -22,6 +23,31 @@ class _UserMapPageState extends State<UserMapPage> {
       setState(() {
         _image = File(pickedFile.path); // Store the captured image
       });
+    }
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    if (index == 0) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const UserSendPage(id: 1)),
+      );
+    } else if (index == 1) {
+      // Stay on UserMapPage
+    } else if (index == 2) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const UserListPage()), // Navigate to UserListPage
+      );
+    } else if (index == 3) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const UserProfilePage()),
+      );
     }
   }
 
@@ -171,25 +197,11 @@ class _UserMapPageState extends State<UserMapPage> {
           ),
         ],
         currentIndex: _selectedIndex, // Set default status
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
+        selectedItemColor: Theme.of(context).primaryColor,
+        unselectedItemColor: Colors.black,
+        showSelectedLabels: true,
         showUnselectedLabels: true,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-            if (index == 0) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const UserSendPage(id: 1,)),
-              );
-            } else if (index == 2) { // When tapping Receipt List
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const UserListPage()), // Navigate to UserListPage
-              );
-            }
-          });
-        },
+        onTap: _onItemTapped,
       ),
     );
   }

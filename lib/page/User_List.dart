@@ -1,5 +1,6 @@
 import 'package:delivery_app/page/User_send.dart';
 import 'package:delivery_app/page/User_map.dart'; // Import UserMapPage
+import 'package:delivery_app/page/User_Profile.dart'; // Import UserProfilePage
 import 'package:flutter/material.dart';
 
 class UserListPage extends StatefulWidget {
@@ -11,11 +12,37 @@ class UserListPage extends StatefulWidget {
 
 class _UserListPageState extends State<UserListPage> {
   int _selectedStatus = 0; // Current status
+  int _selectedIndex = 2; // Default index for UserListPage
   List<String> _items = [
     "รายการที่ 1",
     "รายการที่ 2",
     "รายการที่ 3"
   ]; // Items to display
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    if (index == 0) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const UserSendPage(id: 1)),
+      );
+    } else if (index == 1) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const UserMapPage()),
+      );
+    } else if (index == 2) {
+      // Stay on UserListPage
+    } else if (index == 3) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const UserProfilePage()),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -131,35 +158,12 @@ class _UserListPageState extends State<UserListPage> {
             label: 'โปรไฟล์',
           ),
         ],
-        currentIndex: 2, // Set default status to show Receipt List
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
+        currentIndex: _selectedIndex, // Set default status to show Receipt List
+        selectedItemColor: Theme.of(context).primaryColor,
+        unselectedItemColor: Colors.black,
+        showSelectedLabels: true,
         showUnselectedLabels: true,
-        onTap: (index) {
-          setState(() {
-            // Navigate based on BottomNavigationBar selection
-            if (index == 0) {
-              // Navigate to UserSendPage
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const UserSendPage(
-                          id: 1,
-                        )),
-              );
-            } else if (index == 1) {
-              // Navigate to UserMapPage
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const UserMapPage()),
-              );
-            } else if (index == 2) {
-              // Stay on UserListPage
-            } else if (index == 3) {
-              // Navigate to Profile Page (not implemented yet)
-            }
-          });
-        },
+        onTap: _onItemTapped,
       ),
     );
   }
