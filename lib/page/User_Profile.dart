@@ -4,7 +4,8 @@ import 'package:delivery_app/page/User_map.dart';
 import 'package:delivery_app/page/User_list.dart'; // Import UserListPage
 
 class UserProfilePage extends StatefulWidget {
-  const UserProfilePage({Key? key}) : super(key: key);
+  int id = 0;
+  UserProfilePage({Key? key, required id}) : super(key: key);
 
   @override
   State<UserProfilePage> createState() => _UserProfilePageState();
@@ -18,17 +19,20 @@ class _UserProfilePageState extends State<UserProfilePage> {
       if (index == 0) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const UserSendPage(id: 1)),
+          MaterialPageRoute(builder: (context) => UserSendPage(id: widget.id)),
         );
       } else if (index == 1) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const UserMapPage()),
+          MaterialPageRoute(
+              builder: (context) => UserMapPage(
+                    id: widget.id,
+                  )),
         );
       } else if (index == 2) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const UserListPage()),
+          MaterialPageRoute(builder: (context) => UserListPage(id: widget.id)),
         );
       } else if (index == 3) {
         // Stay on UserProfilePage
@@ -113,7 +117,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                             255, 255, 255, 255), // สีพื้นหลังของปุ่ม
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5), // ขอบปุ่มโค้งมน
+                          borderRadius:
+                              BorderRadius.circular(5), // ขอบปุ่มโค้งมน
                         ),
                       ),
                       child: const Text(

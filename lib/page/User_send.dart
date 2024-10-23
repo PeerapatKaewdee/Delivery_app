@@ -1,3 +1,6 @@
+import 'dart:developer';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:delivery_app/config/config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -58,6 +61,7 @@ class _UserSendPageState extends State<UserSendPage> {
                 'receiver_name': user['receiver_name'],
                 'receiver_phone': user['receiver_phone'],
                 'is_self': user['receiver_id'] == widget.id,
+                'gps_location': user['gps_location'], // เก็บพิกัด GPS ถ้ามี
               };
             }).toList();
           });
@@ -153,22 +157,31 @@ class _UserSendPageState extends State<UserSendPage> {
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const UserSendPage(id: 1)),
+        MaterialPageRoute(builder: (context) => UserSendPage(id: widget.id)),
       );
     } else if (index == 1) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const UserMapPage()),
+        MaterialPageRoute(
+            builder: (context) => UserMapPage(
+                  id: widget.id,
+                )),
       );
     } else if (index == 2) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const UserListPage()),
+        MaterialPageRoute(
+            builder: (context) => UserListPage(
+                  id: widget.id,
+                )),
       );
     } else if (index == 3) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const UserProfilePage()),
+        MaterialPageRoute(
+            builder: (context) => UserProfilePage(
+                  id: widget.id,
+                )),
       );
     }
   }
@@ -235,18 +248,30 @@ class _UserSendPageState extends State<UserSendPage> {
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: _searchResults.length,
                 itemBuilder: (context, index) {
+                  final receiver = _searchResults[index];
                   return Card(
                     margin: const EdgeInsets.symmetric(vertical: 8.0),
                     child: ListTile(
-                      title: Text(_searchResults[index]['receiver_name']),
-                      subtitle: Text(_searchResults[index]['receiver_phone']),
+                      title: Text(receiver['receiver_name']),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(receiver['receiver_phone']),
+                          if (receiver.containsKey('gps_location'))
+                            Text(
+                              'พิกัด: Lat: ${receiver['gps_location']['lat']}, Lng: ${receiver['gps_location']['lng']}',
+                              style: const TextStyle(
+                                  fontSize: 12, color: Colors.grey),
+                            ),
+                        ],
+                      ),
                       onTap: () {
-                        if (_searchResults[index]['is_self']) {
+                        if (receiver['is_self']) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('นี่คือเบอร์ของคุณ')),
                           );
                         } else {
-                          _selectReceiver(_searchResults[index]);
+                          _selectReceiver(receiver);
                         }
                       },
                     ),
@@ -264,7 +289,18 @@ class _UserSendPageState extends State<UserSendPage> {
                   margin: const EdgeInsets.symmetric(vertical: 8.0),
                   child: ListTile(
                     title: Text(_selectedReceiver!['receiver_name']),
-                    subtitle: Text(_selectedReceiver!['receiver_phone']),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(_selectedReceiver!['receiver_phone']),
+                        if (_selectedReceiver!.containsKey('gps_location'))
+                          Text(
+                            'พิกัด: Lat: ${_selectedReceiver!['gps_location']['lat']}, Lng: ${_selectedReceiver!['gps_location']['lng']}',
+                            style: const TextStyle(
+                                fontSize: 12, color: Colors.grey),
+                          ),
+                      ],
+                    ),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete),
                       onPressed: () {
@@ -276,6 +312,7 @@ class _UserSendPageState extends State<UserSendPage> {
                   ),
                 ),
               ],
+
               const SizedBox(height: 8),
               const Text(
                 'สร้างรายการส่งสินค้า',
@@ -308,7 +345,7 @@ class _UserSendPageState extends State<UserSendPage> {
               ),
               const SizedBox(height: 8),
               ElevatedButton(
-                onPressed: _createDelivery,
+                onPressed: sendShipment,
                 child: const Text('สร้างรายการ'),
               ),
               const SizedBox(height: 16),
@@ -375,5 +412,46 @@ class _UserSendPageState extends State<UserSendPage> {
         onTap: _onItemTapped,
       ),
     );
+  }
+
+  void sendShipment() {
+    var db = FirebaseFirestore.instance;
+    var itemDetails = _itemDetailsController.text.trim();
+
+    // ตรวจสอบว่าได้เลือกผู้รับหรือไม่
+    if (_selectedReceiver != null &&
+        _selectedReceiver!['gps_location'] != null) {
+      var data = {
+        "send_id": widget.id,
+        "reship_id": _selectedReceiver!['receiver_id'],
+        'rider_id': 0,
+        'receiver_phone': _selectedReceiver!['receiver_phone'],
+        'item_details': itemDetails,
+        'reshiplocation': {
+          'lat': _selectedReceiver!['gps_location']['lat'],
+          'lng': _selectedReceiver!['gps_location']['lng'],
+        },
+      };
+
+      // บันทึกข้อมูลไปยัง Firestore โดยใช้ add เพื่อสร้าง ID อัตโนมัติ
+      db.collection('Delivery').add(data).then((docRef) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ข้อมูลการส่งถูกบันทึกเรียบร้อยแล้ว')),
+        );
+        print('Shipment data sent successfully with ID: ${docRef.id}');
+        log(docRef.id);
+      }).catchError((error) {
+        print('Failed to send shipment data: $error');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('เกิดข้อผิดพลาด: $error')),
+        );
+      });
+    } else {
+      // ถ้าไม่ได้เลือกผู้รับหรือ gps_location เป็น null
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('กรุณาเลือกผู้รับและตรวจสอบตำแหน่ง GPS ก่อนส่ง')),
+      );
+    }
   }
 }

@@ -1,46 +1,55 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:delivery_app/page/User_send.dart';
 import 'package:delivery_app/page/User_map.dart'; // Import UserMapPage
 import 'package:delivery_app/page/User_Profile.dart'; // Import UserProfilePage
 import 'package:flutter/material.dart';
 
+enum DeliveryStatus { status1, status2, status3 }
+
 class UserListPage extends StatefulWidget {
-  const UserListPage({super.key});
+  int id = 0;
+  UserListPage({super.key, required id});
 
   @override
   State<UserListPage> createState() => _UserListPageState();
 }
 
 class _UserListPageState extends State<UserListPage> {
-  int _selectedStatus = 0; // Current status
+  DeliveryStatus _selectedStatus = DeliveryStatus.status1; // Current status
   int _selectedIndex = 2; // Default index for UserListPage
-  List<String> _items = [
-    "รายการที่ 1",
-    "รายการที่ 2",
-    "รายการที่ 3"
-  ]; // Items to display
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
 
-    if (index == 0) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const UserSendPage(id: 1)),
-      );
-    } else if (index == 1) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const UserMapPage()),
-      );
-    } else if (index == 2) {
-      // Stay on UserListPage
-    } else if (index == 3) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const UserProfilePage()),
-      );
+    // Navigate based on the index
+    switch (index) {
+      case 0:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => UserSendPage(id: widget.id)),
+        );
+        break;
+      case 1:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) => UserMapPage(
+                    id: widget.id,
+                  )),
+        );
+        break;
+      case 3:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) => UserProfilePage(
+                    id: widget.id,
+                  )),
+        );
+        break;
+      // case 2: // Stay on UserListPage
     }
   }
 
@@ -63,7 +72,7 @@ class _UserListPageState extends State<UserListPage> {
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
-                      _selectedStatus = 0; // Status for item 1
+                      _selectedStatus = DeliveryStatus.status1;
                     });
                   },
                   style: ElevatedButton.styleFrom(
@@ -74,7 +83,7 @@ class _UserListPageState extends State<UserListPage> {
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
-                      _selectedStatus = 1; // Status for item 2
+                      _selectedStatus = DeliveryStatus.status2;
                     });
                   },
                   style: ElevatedButton.styleFrom(
@@ -85,7 +94,7 @@ class _UserListPageState extends State<UserListPage> {
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
-                      _selectedStatus = 2; // Status for item 3
+                      _selectedStatus = DeliveryStatus.status3;
                     });
                   },
                   style: ElevatedButton.styleFrom(
@@ -98,39 +107,61 @@ class _UserListPageState extends State<UserListPage> {
             const SizedBox(height: 50),
             Center(
               child: Text(
-                _selectedStatus == 0
-                    ? 'สถานะ: สถานะ 1'
-                    : _selectedStatus == 1
-                        ? 'สถานะ: สถานะ 2'
-                        : 'สถานะ: สถานะ 3',
+                'สถานะ: ${_selectedStatus.name}', // ใช้ชื่อ enum
                 style: const TextStyle(fontSize: 20),
               ),
             ),
             const SizedBox(height: 50),
-            // Card for displaying items
-            ListView.builder(
-              itemCount: _items.length, // จำนวนข้อมูลที่มี
-              itemBuilder: (context, index) {
-                return Card(
-                  elevation: 4,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          _items[index], // ข้อมูลในแต่ละรายการ
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('Delivery')
+                  .where('send_id',
+                      isEqualTo:
+                          1) // แทนที่ 'your_send_id' ด้วยค่าที่คุณต้องการ
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (snapshot.hasError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('เกิดข้อผิดพลาด: ${snapshot.error}'),
+                    ),
+                  );
+                  return const Center(child: Text('เกิดข้อผิดพลาด'));
+                }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(
+                      child: Text('ไม่มีข้อมูลรายการส่งสินค้า'));
+                }
+
+                final items = snapshot.data!.docs;
+
+                return ListView.builder(
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final item = items[index].data() as Map<String, dynamic>;
+
+                    return Card(
+                      elevation: 4,
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: ListTile(
+                        title: Text(
+                          item['description'] ??
+                              'ไม่มีรายละเอียด', // แสดงรายละเอียดสินค้า
                           style: const TextStyle(fontSize: 18),
                         ),
-                        const Icon(Icons
+                        trailing: const Icon(Icons
                             .arrow_forward), // ไอคอนสำหรับรายละเอียดเพิ่มเติม
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 );
               },
             ),
