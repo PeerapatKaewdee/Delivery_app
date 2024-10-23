@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
+import 'package:delivery_app/page/User_Profile.dart';
 import 'package:delivery_app/page/User_send.dart';
 import 'package:delivery_app/page/User_list.dart'; // Import UserListPage
 import 'package:flutter/material.dart';
@@ -5,7 +7,8 @@ import 'package:image_picker/image_picker.dart'; // For image selection
 import 'dart:io'; // For file handling
 
 class UserMapPage extends StatefulWidget {
-  const UserMapPage({super.key});
+  final int id;
+  UserMapPage({super.key, required this.id});
 
   @override
   State<UserMapPage> createState() => _UserMapPageState();
@@ -17,11 +20,43 @@ class _UserMapPageState extends State<UserMapPage> {
   File? _image; // Variable to hold the selected image
 
   Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.camera); // Open camera
+    final pickedFile = await ImagePicker()
+        .pickImage(source: ImageSource.camera); // Open camera
     if (pickedFile != null) {
       setState(() {
         _image = File(pickedFile.path); // Store the captured image
       });
+    }
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    if (index == 0) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => UserSendPage(id: widget.id)),
+      );
+    } else if (index == 1) {
+      // Stay on UserMapPage
+    } else if (index == 2) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) => UserListPage(
+                  id: widget.id,
+                )), // Navigate to UserListPage
+      );
+    } else if (index == 3) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) => UserProfilePage(
+                  id: widget.id,
+                )),
+      );
     }
   }
 
@@ -88,64 +123,103 @@ class _UserMapPageState extends State<UserMapPage> {
               ),
             ),
             const SizedBox(height: 50),
-            // Product detail card
-            Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'รายละเอียดของที่ส่ง',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'รายละเอียดสินค้า: ...', // Add product details
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 16), // Space between details and image
-                    Expanded(
-                      flex: 1,
-                      child: GestureDetector(
-                        onTap: _pickImage, // Select image on tap
-                        child: Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(8),
-                            image: _image != null
-                                ? DecorationImage(
-                                    image: FileImage(_image!),
-                                    fit: BoxFit.cover,
-                                  )
-                                : null,
-                          ),
-                          child: _image == null
-                              ? const Center(
-                                  child: Text(
-                                    'ถ่ายรูป',
-                                    style: TextStyle(color: Colors.grey),
-                                  ),
-                                )
-                              : null,
+            // Use StreamBuilder to fetch data from Firestore
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('Delivery')
+                    .where('send_id',
+                        isEqualTo:
+                            widget.id) // Replace with the desired send_id
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (snapshot.hasError) {
+                    return const Center(
+                        child: Text('เกิดข้อผิดพลาดในการโหลดข้อมูล'));
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(child: Text('ไม่มีข้อมูลการจัดส่ง'));
+                  }
+
+                  return ListView.builder(
+                    itemCount: snapshot.data!.docs.length,
+                    itemBuilder: (context, index) {
+                      final deliveryData = snapshot.data!.docs[index].data()
+                          as Map<String, dynamic>;
+                      return Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                      ),
-                    ),
-                  ],
-                ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'รายละเอียดของที่ส่ง',
+                                      style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'รายละเอียดสินค้า: ${deliveryData['description'] ?? 'ไม่มีรายละเอียด'}',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    Text(
+                                      'สถานะ: ${deliveryData['status'] ?? 'ไม่มีสถานะ'}',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                flex: 1,
+                                child: GestureDetector(
+                                  onTap: _pickImage, // Select image on tap
+                                  child: Container(
+                                    width: 100,
+                                    height: 100,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[200],
+                                      borderRadius: BorderRadius.circular(8),
+                                      image: _image != null
+                                          ? DecorationImage(
+                                              image: FileImage(_image!),
+                                              fit: BoxFit.cover,
+                                            )
+                                          : null,
+                                    ),
+                                    child: _image == null
+                                        ? const Center(
+                                            child: Text(
+                                              'ถ่ายรูป',
+                                              style:
+                                                  TextStyle(color: Colors.grey),
+                                            ),
+                                          )
+                                        : null,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ],
@@ -171,25 +245,11 @@ class _UserMapPageState extends State<UserMapPage> {
           ),
         ],
         currentIndex: _selectedIndex, // Set default status
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
+        selectedItemColor: Theme.of(context).primaryColor,
+        unselectedItemColor: Colors.black,
+        showSelectedLabels: true,
         showUnselectedLabels: true,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-            if (index == 0) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const UserSendPage(id: 1,)),
-              );
-            } else if (index == 2) { // When tapping Receipt List
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const UserListPage()), // Navigate to UserListPage
-              );
-            }
-          });
-        },
+        onTap: _onItemTapped,
       ),
     );
   }

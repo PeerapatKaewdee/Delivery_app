@@ -1,8 +1,10 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:delivery_app/config/config.dart';
 import 'package:delivery_app/page/Login.dart';
 import 'package:delivery_app/page/RegisterCustomer.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert'; // for jsonEncode
@@ -76,39 +78,45 @@ class _RegisterRiderState extends State<RegisterRider> {
                           children: [
                             const SizedBox(height: 10.0),
                             Center(
-                              child: GestureDetector(
-                                onTap: () async {
-                                  final XFile? pickedImage = await picker
-                                      .pickImage(source: ImageSource.gallery);
-                                  if (pickedImage != null) {
-                                    log(pickedImage.path);
-                                    setState(() {
-                                      image =
-                                          pickedImage; // อัปเดตค่า image ที่เลือก
-                                    });
-                                  } else {
-                                    log('No Image');
-                                  }
-                                },
-                                child: CircleAvatar(
-                                  radius: 45, // ขนาดของ avatar
-                                  backgroundColor: Colors.grey[300],
-                                  child: image !=
-                                          null // ถ้า image มีค่า ให้แสดงรูปที่เลือกแทนไอคอน
-                                      ? ClipOval(
-                                          child: Image.file(
-                                            File(image!.path),
-                                            fit: BoxFit.cover,
-                                            width: 90,
-                                            height: 90,
-                                          ),
-                                        )
-                                      : const Icon(
-                                          Icons.person,
-                                          size: 40, // ขนาดไอคอน
-                                          color: Colors.white,
-                                        ),
-                                ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  GestureDetector(
+                                    onTap: () async {
+                                      final XFile? pickedImage =
+                                          await picker.pickImage(
+                                              source: ImageSource.gallery);
+                                      if (pickedImage != null) {
+                                        log(pickedImage.path);
+                                        setState(() {
+                                          image =
+                                              pickedImage; // อัปเดตรูปที่เลือก
+                                        });
+                                      } else {
+                                        log('No Image');
+                                      }
+                                    },
+                                    child: CircleAvatar(
+                                      radius: 45, // ขนาดของ avatar
+                                      backgroundColor: Colors.grey[300],
+                                      child: image != null
+                                          ? ClipOval(
+                                              child: Image.file(
+                                                File(image!.path),
+                                                fit: BoxFit.cover,
+                                                width: 90,
+                                                height: 90,
+                                              ),
+                                            )
+                                          : const Icon(
+                                              Icons.person,
+                                              size: 40, // ขนาดของไอคอน
+                                              color: Colors.white,
+                                            ),
+                                    ),
+                                  ),
+                                  SizedBox(height: 20),
+                                ],
                               ),
                             ),
                             const SizedBox(height: 10.0),
@@ -276,6 +284,7 @@ class _RegisterRiderState extends State<RegisterRider> {
                                 ElevatedButton(
                                   onPressed: () {
                                     registerRider();
+                                    onConfirm;
                                     // Handle register action
                                   },
                                   style: ButtonStyle(
@@ -523,6 +532,54 @@ class _RegisterRiderState extends State<RegisterRider> {
           ],
         ),
       );
+    }
+  }
+
+// Method อัปโหลดรูปไปยัง Firebase Storage
+  Future<String?> uploadImageToStorage(XFile image) async {
+    try {
+      // สร้าง reference ไปยังตำแหน่งที่จะเก็บไฟล์ใน Firebase Storage
+      Reference storageRef = FirebaseStorage.instance
+          .ref()
+          .child('profile_images/${DateTime.now().toString()}.jpg');
+
+      // อัปโหลดไฟล์ไปยัง Firebase Storage
+      UploadTask uploadTask = storageRef.putFile(File(image.path));
+      TaskSnapshot snapshot = await uploadTask;
+
+      // รับ URL ของรูปที่อัปโหลดแล้ว
+      String downloadURL = await snapshot.ref.getDownloadURL();
+      return downloadURL;
+    } catch (e) {
+      log('Error uploading image: $e');
+      return null;
+    }
+  }
+
+  // Method บันทึก URL ของรูปใน Firestore
+  Future<void> saveImageUrlToFirestore(String downloadUrl) async {
+    try {
+      await FirebaseFirestore.instance.collection('users').doc('user_id').set({
+        'profileImageUrl': downloadUrl,
+      });
+      log('Image URL saved to Firestore');
+    } catch (e) {
+      log('Error saving image URL: $e');
+    }
+  }
+
+  // เมื่อกดปุ่มยืนยัน
+  Future<void> onConfirm() async {
+    if (image != null) {
+      // 1. อัปโหลดรูปไป Firebase Storage
+      String? downloadUrl = await uploadImageToStorage(image!);
+
+      if (downloadUrl != null) {
+        // 2. บันทึก URL ลง Firestore
+        await saveImageUrlToFirestore(downloadUrl);
+      }
+    } else {
+      log('No image selected');
     }
   }
 }
