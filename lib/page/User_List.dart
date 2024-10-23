@@ -7,8 +7,8 @@ import 'package:flutter/material.dart';
 enum DeliveryStatus { status1, status2, status3 }
 
 class UserListPage extends StatefulWidget {
-  int id = 0;
-  UserListPage({super.key, required id});
+  final int id; // Change to final
+  UserListPage({super.key, required this.id});
 
   @override
   State<UserListPage> createState() => _UserListPageState();
@@ -115,9 +115,7 @@ class _UserListPageState extends State<UserListPage> {
             StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('Delivery')
-                  .where('send_id',
-                      isEqualTo:
-                          1) // แทนที่ 'your_send_id' ด้วยค่าที่คุณต้องการ
+                  .where('reship_id', isEqualTo: widget.id) // ใช้ reship_id
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {

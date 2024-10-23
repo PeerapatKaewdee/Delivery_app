@@ -427,10 +427,10 @@ class _UserSendPageState extends State<UserSendPage> {
         'rider_id': 0,
         'receiver_phone': _selectedReceiver!['receiver_phone'],
         'item_details': itemDetails,
-        'reshiplocation': {
-          'lat': _selectedReceiver!['gps_location']['lat'],
-          'lng': _selectedReceiver!['gps_location']['lng'],
-        },
+        'reshiplocation': GeoPoint(
+          _selectedReceiver!['gps_location']['lat'],
+          _selectedReceiver!['gps_location']['lng'],
+        ),
       };
 
       // บันทึกข้อมูลไปยัง Firestore โดยใช้ add เพื่อสร้าง ID อัตโนมัติ

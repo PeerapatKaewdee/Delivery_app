@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:delivery_app/firebase_options.dart';
+import 'package:delivery_app/page/Risers_Get.dart';
 import 'package:delivery_app/page/Selecttype.dart';
 import 'package:delivery_app/page/User_send.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -31,7 +32,8 @@ class MyApp extends StatelessWidget {
       //home : RegisterRider()
       // home: RegisterCustomer()
       // home:Selecttype(),
-      home: LoginPage(),
+      // home: LoginPage(),
+      home: RidersGetPage(id: 1),
     );
   }
 }

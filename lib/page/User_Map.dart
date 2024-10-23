@@ -7,8 +7,8 @@ import 'package:image_picker/image_picker.dart'; // For image selection
 import 'dart:io'; // For file handling
 
 class UserMapPage extends StatefulWidget {
-  int id = 0;
-  UserMapPage({super.key, required id});
+  final int id;
+  UserMapPage({super.key, required this.id});
 
   @override
   State<UserMapPage> createState() => _UserMapPageState();
@@ -18,7 +18,6 @@ class _UserMapPageState extends State<UserMapPage> {
   int _selectedStatus = 0; // Current status
   int _selectedIndex = 1; // BottomNavigationBar status
   File? _image; // Variable to hold the selected image
-  final int sendId = 1; // Define send_id that you want to query
 
   Future<void> _pickImage() async {
     final pickedFile = await ImagePicker()
@@ -46,7 +45,9 @@ class _UserMapPageState extends State<UserMapPage> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-            builder: (context) => UserListPage(id: widget.id,)), // Navigate to UserListPage
+            builder: (context) => UserListPage(
+                  id: widget.id,
+                )), // Navigate to UserListPage
       );
     } else if (index == 3) {
       Navigator.pushReplacement(
@@ -123,95 +124,103 @@ class _UserMapPageState extends State<UserMapPage> {
             ),
             const SizedBox(height: 50),
             // Use StreamBuilder to fetch data from Firestore
-            StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('Delivery')
-                  .where('send_id',
-                      isEqualTo: sendId) // Replace with the desired send_id
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('Delivery')
+                    .where('send_id',
+                        isEqualTo:
+                            widget.id) // Replace with the desired send_id
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                if (snapshot.hasError) {
-                  return const Center(
-                      child: Text('เกิดข้อผิดพลาดในการโหลดข้อมูล'));
-                }
+                  if (snapshot.hasError) {
+                    return const Center(
+                        child: Text('เกิดข้อผิดพลาดในการโหลดข้อมูล'));
+                  }
 
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(child: Text('ไม่มีข้อมูลการจัดส่ง'));
-                }
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(child: Text('ไม่มีข้อมูลการจัดส่ง'));
+                  }
 
-                final deliveryData =
-                    snapshot.data!.docs.first.data() as Map<String, dynamic>;
-
-                return Card(
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                  return ListView.builder(
+                    itemCount: snapshot.data!.docs.length,
+                    itemBuilder: (context, index) {
+                      final deliveryData = snapshot.data!.docs[index].data()
+                          as Map<String, dynamic>;
+                      return Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
                             children: [
-                              const Text(
-                                'รายละเอียดของที่ส่ง',
-                                style: TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold),
+                              Expanded(
+                                flex: 2,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'รายละเอียดของที่ส่ง',
+                                      style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'รายละเอียดสินค้า: ${deliveryData['description'] ?? 'ไม่มีรายละเอียด'}',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    Text(
+                                      'สถานะ: ${deliveryData['status'] ?? 'ไม่มีสถานะ'}',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'รายละเอียดสินค้า: ${deliveryData['description'] ?? 'ไม่มีรายละเอียด'}', // Add product details
-                                style: const TextStyle(fontSize: 16),
-                              ),
-                              Text(
-                                'สถานะ: ${deliveryData['status'] ?? 'ไม่มีสถานะ'}',
-                                style: const TextStyle(fontSize: 16),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                flex: 1,
+                                child: GestureDetector(
+                                  onTap: _pickImage, // Select image on tap
+                                  child: Container(
+                                    width: 100,
+                                    height: 100,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[200],
+                                      borderRadius: BorderRadius.circular(8),
+                                      image: _image != null
+                                          ? DecorationImage(
+                                              image: FileImage(_image!),
+                                              fit: BoxFit.cover,
+                                            )
+                                          : null,
+                                    ),
+                                    child: _image == null
+                                        ? const Center(
+                                            child: Text(
+                                              'ถ่ายรูป',
+                                              style:
+                                                  TextStyle(color: Colors.grey),
+                                            ),
+                                          )
+                                        : null,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(
-                            width: 16), // Space between details and image
-                        Expanded(
-                          flex: 1,
-                          child: GestureDetector(
-                            onTap: _pickImage, // Select image on tap
-                            child: Container(
-                              width: 100,
-                              height: 100,
-                              decoration: BoxDecoration(
-                                color: Colors.grey[200],
-                                borderRadius: BorderRadius.circular(8),
-                                image: _image != null
-                                    ? DecorationImage(
-                                        image: FileImage(_image!),
-                                        fit: BoxFit.cover,
-                                      )
-                                    : null,
-                              ),
-                              child: _image == null
-                                  ? const Center(
-                                      child: Text(
-                                        'ถ่ายรูป',
-                                        style: TextStyle(color: Colors.grey),
-                                      ),
-                                    )
-                                  : null,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),
