@@ -108,32 +108,31 @@ class _UserListPageState extends State<UserListPage> {
             ),
             const SizedBox(height: 50),
             // Card for displaying items
-            Expanded(
-              child: ListView.builder(
-                itemCount: _items.length,
-                itemBuilder: (context, index) {
-                  return Card(
-                    elevation: 4,
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+            ListView.builder(
+              itemCount: _items.length, // จำนวนข้อมูลที่มี
+              itemBuilder: (context, index) {
+                return Card(
+                  elevation: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _items[index], // ข้อมูลในแต่ละรายการ
+                          style: const TextStyle(fontSize: 18),
+                        ),
+                        const Icon(Icons
+                            .arrow_forward), // ไอคอนสำหรับรายละเอียดเพิ่มเติม
+                      ],
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            _items[index],
-                            style: const TextStyle(fontSize: 18),
-                          ),
-                          const Icon(Icons.arrow_forward), // Icon for details
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
           ],
         ),

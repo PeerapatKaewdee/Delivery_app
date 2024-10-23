@@ -15,7 +15,8 @@ class UserSendPage extends StatefulWidget {
 }
 
 class _UserSendPageState extends State<UserSendPage> {
-  final TextEditingController _receiverPhoneController = TextEditingController();
+  final TextEditingController _receiverPhoneController =
+      TextEditingController();
   final TextEditingController _itemDetailsController = TextEditingController();
   List<Map<String, dynamic>> _searchResults = [];
   String url = '';
@@ -91,7 +92,9 @@ class _UserSendPageState extends State<UserSendPage> {
         },
         body: jsonEncode(<String, dynamic>{
           'sender_id': widget.id,
-          'receiver_id': _selectedReceiver != null ? _selectedReceiver!['receiver_id'] : null,
+          'receiver_id': _selectedReceiver != null
+              ? _selectedReceiver!['receiver_id']
+              : null,
           'receiver_phone': _receiverPhoneController.text.isNotEmpty
               ? _receiverPhoneController.text
               : null,
@@ -109,7 +112,9 @@ class _UserSendPageState extends State<UserSendPage> {
           _deliveries.add({
             'description': itemDetails,
             'receiver_name': _selectedReceiver?['receiver_name'] ?? 'ไม่ระบุ',
-            'receiver_phone': _receiverPhoneController.text.isNotEmpty ? _receiverPhoneController.text : 'ไม่ระบุ',
+            'receiver_phone': _receiverPhoneController.text.isNotEmpty
+                ? _receiverPhoneController.text
+                : 'ไม่ระบุ',
           });
         });
         ScaffoldMessenger.of(context).showSnackBar(
@@ -225,28 +230,28 @@ class _UserSendPageState extends State<UserSendPage> {
                 child: const Text('ค้นหา'),
               ),
               const SizedBox(height: 16),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _searchResults.length,
-                  itemBuilder: (context, index) {
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: ListTile(
-                        title: Text(_searchResults[index]['receiver_name']),
-                        subtitle: Text(_searchResults[index]['receiver_phone']),
-                        onTap: () {
-                          if (_searchResults[index]['is_self']) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('นี่คือเบอร์ของคุณ')),
-                            );
-                          } else {
-                            _selectReceiver(_searchResults[index]);
-                          }
-                        },
-                      ),
-                    );
-                  },
-                ),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _searchResults.length,
+                itemBuilder: (context, index) {
+                  return Card(
+                    margin: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: ListTile(
+                      title: Text(_searchResults[index]['receiver_name']),
+                      subtitle: Text(_searchResults[index]['receiver_phone']),
+                      onTap: () {
+                        if (_searchResults[index]['is_self']) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('นี่คือเบอร์ของคุณ')),
+                          );
+                        } else {
+                          _selectReceiver(_searchResults[index]);
+                        }
+                      },
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 8),
               if (_selectedReceiver != null) ...[
@@ -260,6 +265,14 @@ class _UserSendPageState extends State<UserSendPage> {
                   child: ListTile(
                     title: Text(_selectedReceiver!['receiver_name']),
                     subtitle: Text(_selectedReceiver!['receiver_phone']),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () {
+                        setState(() {
+                          _selectedReceiver = null; // ลบผู้รับที่เลือก
+                        });
+                      },
+                    ),
                   ),
                 ),
               ],
@@ -299,25 +312,38 @@ class _UserSendPageState extends State<UserSendPage> {
                 child: const Text('สร้างรายการ'),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'รายการส่งสินค้า:',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _deliveries.length,
-                  itemBuilder: (context, index) {
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: ListTile(
-                        title: Text(_deliveries[index]['description']),
-                        subtitle: Text(
-                            'ผู้รับ: ${_deliveries[index]['receiver_name']} - โทร: ${_deliveries[index]['receiver_phone']}'),
-                      ),
-                    );
-                  },
-                ),
-              ),
+              // const Text(
+              //   'รายการส่งสินค้า:',
+              //   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              // ),
+              // Expanded(
+              //   child: ListView.builder(
+              //     itemCount: _deliveries.length,
+              //     itemBuilder: (context, index) {
+              //       return Card(
+              //         margin: const EdgeInsets.symmetric(vertical: 8.0),
+              //         child: ListTile(
+              //           title: Text(_deliveries[index]['description']),
+              //           subtitle: Text(
+              //               'ผู้รับ: ${_deliveries[index]['receiver_name']} - โทร: ${_deliveries[index]['receiver_phone']}'),
+              //           trailing: IconButton(
+              //             icon: const Icon(Icons.delete),
+              //             onPressed: () {
+              //               setState(() {
+              //                 _deliveries.removeAt(index); // ลบรายการที่เลือก
+              //               });
+              //               ScaffoldMessenger.of(context).showSnackBar(
+              //                 const SnackBar(
+              //                     content:
+              //                         Text('ลบรายการส่งสินค้าเรียบร้อยแล้ว')),
+              //               );
+              //             },
+              //           ),
+              //         ),
+              //       );
+              //     },
+              //   ),
+              // ),
             ],
           ),
         ),
