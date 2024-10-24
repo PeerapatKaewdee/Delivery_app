@@ -385,6 +385,7 @@ class _UserSendPageState extends State<UserSendPage> {
           ),
         ),
       ),
+      // BottomNavigationBar section
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -404,7 +405,7 @@ class _UserSendPageState extends State<UserSendPage> {
             label: 'โปรไฟล์',
           ),
         ],
-        currentIndex: _selectedIndex,
+        currentIndex: _selectedIndex, // Set default status to show Receipt List
         selectedItemColor: Theme.of(context).primaryColor,
         unselectedItemColor: Colors.black,
         showSelectedLabels: true,

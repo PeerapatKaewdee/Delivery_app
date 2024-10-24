@@ -33,9 +33,8 @@ class MyApp extends StatelessWidget {
       //home : RegisterRider()
       // home: RegisterCustomer()
       // home:Selecttype(),
-      // home: LoginPage(),
+      home: LoginPage(),
       // home: RidersGetPage(id: 1),
-      home: MapPage(),
     );
   }
 }
