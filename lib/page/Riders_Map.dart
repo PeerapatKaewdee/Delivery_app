@@ -27,14 +27,17 @@ class _RidersMapPageState extends State<RidersMapPage> {
   Marker? destinationMarker;
   List<LatLng> polylineCoordinates = [];
   Polyline? routePolyline;
-  LatLng riderLatLng = const LatLng(0, 0);
-  LatLng destinationLatLng = const LatLng(0, 0);
+
+  // กำหนดพิกัดเริ่มต้นสำหรับไรเดอร์และจุดหมาย
+  LatLng riderLatLng = const LatLng(13.7563, 100.5018); // Bangkok, Thailand
+  LatLng destinationLatLng =
+      const LatLng(13.7550, 100.5010); // ตัวอย่างพิกัดปลายทาง
+
   bool isLoading = true;
   bool isDestinationReached = false;
   String errorMessage = '';
   double distanceToDestination = double.infinity;
 
-  // เพิ่มตัวแปรใหม่
   String currentStatus = 'pending'; // สถานะเริ่มต้น
   final ImagePicker _picker = ImagePicker();
   File? _imageFile;
@@ -46,7 +49,6 @@ class _RidersMapPageState extends State<RidersMapPage> {
     _fetchCurrentStatus(); // เพิ่มการดึงสถานะปัจจุบัน
   }
 
-  // เพิ่มฟังก์ชันดึงสถานะปัจจุบัน
   Future<void> _fetchCurrentStatus() async {
     try {
       var doc = await FirebaseFirestore.instance
@@ -63,7 +65,6 @@ class _RidersMapPageState extends State<RidersMapPage> {
     }
   }
 
-  // เพิ่มฟังก์ชันถ่ายรูป
   Future<void> _takePicture() async {
     try {
       final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
@@ -83,7 +84,6 @@ class _RidersMapPageState extends State<RidersMapPage> {
     }
   }
 
-  // เพิ่มฟังก์ชันอัพโหลดรูป
   Future<String?> _uploadImage() async {
     if (_imageFile == null) return null;
 
@@ -102,7 +102,6 @@ class _RidersMapPageState extends State<RidersMapPage> {
       await ref.putFile(_imageFile!);
       String downloadURL = await ref.getDownloadURL();
 
-      // เก็บ URL ลงใน Firestore
       await FirebaseFirestore.instance
           .collection('Delivery')
           .doc(widget.docId)
@@ -131,10 +130,8 @@ class _RidersMapPageState extends State<RidersMapPage> {
     }
   }
 
-  // ปรับปรุงฟังก์ชันอัพเดทสถานะ
   Future<void> _updateDeliveryStatus(String newStatus) async {
     try {
-      // ถ่ายรูปก่อนอัพเดทสถานะ
       await _takePicture();
       if (_imageFile == null && newStatus != 'delivered') {
         if (mounted) {
@@ -157,7 +154,6 @@ class _RidersMapPageState extends State<RidersMapPage> {
         currentStatus = newStatus;
       });
 
-      // แสดง Dialog เมื่ออัพเดทสถานะสำเร็จ
       if (mounted) {
         showDialog(
           context: context,
@@ -169,7 +165,6 @@ class _RidersMapPageState extends State<RidersMapPage> {
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  // ถ้าจัดส่งสำเร็จให้กลับไปหน้า RidersGetPage
                   if (newStatus == 'delivered') {
                     Navigator.of(context).pop();
                   }
@@ -202,11 +197,8 @@ class _RidersMapPageState extends State<RidersMapPage> {
     }
   }
 
-  // ปรับปรุง build method
   @override
   Widget build(BuildContext context) {
-    // ... โค้ดส่วน loading และ error checking คงเดิม ...
-
     return Scaffold(
       appBar: AppBar(
         title: const Text("แผนที่การจัดส่ง"),
@@ -270,7 +262,6 @@ class _RidersMapPageState extends State<RidersMapPage> {
                   ),
                   const SizedBox(height: 8),
                 ],
-                // แสดงสถานะปัจจุบัน
                 Text(
                   'สถานะปัจจุบัน: ${_getStatusMessage(currentStatus)}',
                   style: const TextStyle(
@@ -282,7 +273,6 @@ class _RidersMapPageState extends State<RidersMapPage> {
                 else
                   Column(
                     children: [
-                      // ปุ่มรับสินค้า
                       if (currentStatus == 'pending')
                         ElevatedButton(
                           onPressed: () => _updateDeliveryStatus('picked_up'),
@@ -293,7 +283,6 @@ class _RidersMapPageState extends State<RidersMapPage> {
                           child: const Text('รับสินค้า'),
                         ),
                       const SizedBox(height: 8),
-                      // ปุ่มเริ่มจัดส่ง
                       if (currentStatus == 'picked_up')
                         ElevatedButton(
                           onPressed: () => _updateDeliveryStatus('delivering'),
@@ -304,7 +293,6 @@ class _RidersMapPageState extends State<RidersMapPage> {
                           child: const Text('เริ่มจัดส่ง'),
                         ),
                       const SizedBox(height: 8),
-                      // ปุ่มจัดส่งสำเร็จ
                       if (currentStatus == 'delivering')
                         ElevatedButton(
                           onPressed: isDestinationReached

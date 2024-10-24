@@ -432,6 +432,7 @@ class _UserSendPageState extends State<UserSendPage> {
           _selectedReceiver!['gps_location']['lat'],
           _selectedReceiver!['gps_location']['lng'],
         ),
+        "send_status": 0,
       };
 
       // บันทึกข้อมูลไปยัง Firestore โดยใช้ add เพื่อสร้าง ID อัตโนมัติ
