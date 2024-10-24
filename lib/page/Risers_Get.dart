@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:delivery_app/page/Riders_Map.dart';
 import 'package:flutter/material.dart';
@@ -26,11 +28,13 @@ class _RidersGetPageState extends State<RidersGetPage> {
         'rider_status': 1, // สถานะไรเดอร์
       });
       print('ข้อมูลไรเดอร์ถูกอัปเดตเรียบร้อยแล้ว');
+      log(docId.toString());
       Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => RidersMapPage(
               id: widget.id,
+              docId: docId,
             ),
           ));
     } catch (e) {

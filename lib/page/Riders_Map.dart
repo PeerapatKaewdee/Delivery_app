@@ -1,31 +1,41 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http;
+import 'package:delivery_app/config/Google_key.dart';
 
 class RidersMapPage extends StatefulWidget {
-  int id = 0;
-  RidersMapPage({super.key, required this.id});
+  final String docId; // ใช้สำหรับระบุเอกสารใน Firestore
+  final int id;
+
+  RidersMapPage({super.key, required this.id, required this.docId});
 
   @override
   State<RidersMapPage> createState() => _RidersMapPageState();
 }
 
 class _RidersMapPageState extends State<RidersMapPage> {
-  LatLng riderLatLng = const LatLng(16.246825669508297, 103.25199289277295);
-  LatLng destinationLatLng = const LatLng(0, 0); // ตำแหน่งปลายทาง
-  MapController mapController = MapController();
+  GoogleMapController? mapController;
   StreamSubscription<Position>? positionStream;
-  List<LatLng> routePoints = []; // เก็บจุดต่างๆ ในเส้นทาง
+  Marker? riderMarker;
+  Marker? destinationMarker;
+  List<LatLng> polylineCoordinates = [];
+  Polyline? routePolyline;
+  LatLng riderLatLng =
+      LatLng(0, 0); // เริ่มต้นด้วยตำแหน่งไรเดอร์ที่ยังไม่ถูกกำหนด
+  LatLng destinationLatLng = LatLng(0, 0); // เริ่มต้นด้วยตำแหน่งปลายทาง
 
   @override
   void initState() {
     super.initState();
-    _fetchDestination(); // ดึงตำแหน่งปลายทางจาก Firestore
     _startLocationTracking(); // เริ่มติดตามตำแหน่งไรเดอร์แบบเรียลไทม์
+    _fetchDestination(); // ดึงตำแหน่งปลายทางจาก Firestore
   }
 
   @override
@@ -34,24 +44,49 @@ class _RidersMapPageState extends State<RidersMapPage> {
     super.dispose();
   }
 
-  // ฟังก์ชันดึงข้อมูลตำแหน่งปลายทางจาก Firestore
+  // ฟังก์ชันดึงข้อมูลตำแหน่งปลายทางจาก Firestore โดยใช้ docId
   Future<void> _fetchDestination() async {
-    var docSnapshot = await FirebaseFirestore.instance
-        .collection('Deliveries')
-        .doc(widget.id.toString())
-        .get();
+    try {
+      log('Fetching destination...');
+      var docSnapshot = await FirebaseFirestore.instance
+          .collection('Delivery')
+          .doc(widget.docId) // ใช้ docId ที่ส่งมา
+          .get();
 
-    if (docSnapshot.exists) {
-      var data = docSnapshot.data();
-      var reshipLocation = data?['reship_location'] as GeoPoint;
-      setState(() {
-        destinationLatLng =
-            LatLng(reshipLocation.latitude, reshipLocation.longitude);
-      });
+      if (docSnapshot.exists) {
+        var data = docSnapshot.data();
+        var reshipLocation = data?['reshiplocation'];
+
+        log('Data from Firestore: $data'); // Log ข้อมูลที่ดึงมา
+
+        if (reshipLocation is Map<String, dynamic>) {
+          var latitude = reshipLocation['lat'];
+          var longitude = reshipLocation['lng'];
+
+          log('Reship location lat: $latitude, lng: $longitude'); // Log ค่า lat lng
+
+          setState(() {
+            destinationLatLng = LatLng(latitude, longitude);
+            destinationMarker = Marker(
+              markerId: const MarkerId('destination'),
+              position: destinationLatLng,
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueRed),
+            );
+            log('Destination LatLng set: $destinationLatLng'); // Log การตั้งค่าตำแหน่ง
+          });
+        } else {
+          log('Invalid reshiplocation data format');
+        }
+      } else {
+        log('Document not found');
+      }
+    } catch (e) {
+      log('Error fetching destination: $e');
     }
   }
 
-  // ฟังก์ชันติดตามตำแหน่งไรเดอร์
+  // ฟังก์ชันติดตามตำแหน่งไรเดอร์และอัปเดต Firestore แบบเรียลไทม์
   void _startLocationTracking() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -78,10 +113,76 @@ class _RidersMapPageState extends State<RidersMapPage> {
     ).listen((Position position) {
       log('ตำแหน่งใหม่: ${position.latitude}, ${position.longitude}');
       setState(() {
-        riderLatLng = LatLng(position.latitude, position.longitude);
-        mapController.move(riderLatLng, 15.0); // อัปเดตตำแหน่งและซูม
+        riderLatLng = LatLng(13.72264, 100.52931); // ทดสอบด้วยตำแหน่งที่กำหนด
+        log('Rider location updated: $riderLatLng');
+        riderMarker = Marker(
+          markerId: const MarkerId('rider'),
+          position: riderLatLng,
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+        );
+
+        mapController?.animateCamera(
+          CameraUpdate.newLatLng(riderLatLng),
+        );
+
+        // อัปเดตตำแหน่งไรเดอร์ใน Firestore
+        FirebaseFirestore.instance
+            .collection('Delivery')
+            .doc(widget.docId.toString())
+            .update({
+          'riderLocation':
+              GeoPoint(riderLatLng.latitude, riderLatLng.longitude),
+        });
+        _getRouteDirections(); // เรียกฟังก์ชันดึงเส้นทาง
       });
     });
+  }
+
+  // ฟังก์ชันดึงเส้นทางจาก Google Directions API
+  // สร้าง instance ของ PolylinePoints
+  PolylinePoints polylinePoints = PolylinePoints();
+
+  Future<void> _getRouteDirections() async {
+    log("Rider Location: $riderLatLng");
+    log("Destination LatLng: $destinationLatLng");
+
+    if (riderLatLng == LatLng(0, 0) || destinationLatLng == LatLng(0, 0)) {
+      log("Invalid rider or destination location.");
+      return; // ไม่ทำการเรียกหากตำแหน่งไม่ถูกต้อง
+    }
+
+    // สร้าง PolylineRequest
+    PolylineRequest request = PolylineRequest(
+      origin: PointLatLng(riderLatLng.latitude, riderLatLng.longitude),
+      destination:
+          PointLatLng(destinationLatLng.latitude, destinationLatLng.longitude),
+      transitMode: 'bicycling', // ใช้ 'bicycling' เป็น String
+      mode: TravelMode.driving, // ตั้งค่า TravelMode ที่คุณต้องการ
+    );
+
+    // เรียกใช้ getRouteBetweenCoordinates
+    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+      googleApiKey: Google_AIP_KEY, // แทนที่ด้วย API Key ของคุณ
+      request: request,
+    );
+
+    if (result.points.isNotEmpty) {
+      polylineCoordinates.clear();
+      for (var point in result.points) {
+        polylineCoordinates.add(LatLng(point.latitude, point.longitude));
+      }
+
+      setState(() {
+        routePolyline = Polyline(
+          polylineId: const PolylineId('route'),
+          color: Colors.blue,
+          width: 5,
+          points: polylineCoordinates,
+        );
+      });
+    } else {
+      log("No route found: ${result.errorMessage}");
+    }
   }
 
   @override
@@ -90,78 +191,43 @@ class _RidersMapPageState extends State<RidersMapPage> {
       appBar: AppBar(
         title: const Center(child: Text("Rider Map")),
       ),
-      body: Center(
-        child: Column(
-          children: [
-            const SizedBox(height: 30),
-            Expanded(
-              flex: 6,
-              child: FlutterMap(
-                mapController: mapController,
-                options: MapOptions(
-                  initialCenter: riderLatLng,
-                  initialZoom: 15.0,
-                ),
-                children: [
-                  TileLayer(
-                    urlTemplate:
-                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    userAgentPackageName: 'com.example.app',
-                  ),
-                  MarkerLayer(
-                    markers: [
-                      Marker(
-                        point: riderLatLng,
-                        width: 40,
-                        height: 40,
-                        child: const Icon(
-                          Icons.motorcycle_rounded,
-                          color: Colors.black,
-                          size: 30,
-                        ),
-                      ),
-                      Marker(
-                        point: destinationLatLng,
-                        width: 40,
-                        height: 40,
-                        child: const Icon(
-                          Icons.location_pin,
-                          color: Colors.red,
-                          size: 30,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+      body: GoogleMap(
+        initialCameraPosition: CameraPosition(
+          target: riderLatLng,
+          zoom: 15,
+        ),
+        markers: {
+          if (riderMarker != null) riderMarker!,
+          if (destinationMarker != null) destinationMarker!,
+        },
+        polylines: {
+          if (routePolyline != null) routePolyline!,
+        },
+        onMapCreated: (GoogleMapController controller) {
+          mapController = controller;
+        },
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: ElevatedButton(
+          onPressed: () {
+            // ฟังก์ชันที่ใช้เมื่อถึงจุดหมาย
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color.fromARGB(255, 0, 222, 22),
+            shadowColor: Colors.black,
+            elevation: 10,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
             ),
-            const SizedBox(height: 50),
-            Expanded(
-              flex: 1,
-              child: Column(
-                children: [
-                  FilledButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 0, 222, 22),
-                      shadowColor: Colors.black,
-                      elevation: 10,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text(
-                      "ถึงจุดหมายแล้ว",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+          ),
+          child: const Text(
+            "ถึงจุดหมายแล้ว",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
             ),
-          ],
+          ),
         ),
       ),
     );

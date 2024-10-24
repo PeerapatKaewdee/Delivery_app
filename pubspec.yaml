@@ -49,6 +49,9 @@ dependencies:
   google_maps_flutter: ^2.9.0
   google_places_flutter: ^2.0.9
   firebase_storage: ^12.3.4
+  flutter_polyline_points: ^2.1.0
+  dio: ^5.7.0
+
 
 dev_dependencies:
   flutter_test:
