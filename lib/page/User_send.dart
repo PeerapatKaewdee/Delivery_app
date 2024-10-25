@@ -110,7 +110,7 @@ class _UserSendPageState extends State<UserSendPage> {
           ],
         }),
       );
-
+      log(response.statusCode.toString());
       if (response.statusCode == 201) {
         setState(() {
           _deliveries.add({
@@ -385,6 +385,7 @@ class _UserSendPageState extends State<UserSendPage> {
           ),
         ),
       ),
+      // BottomNavigationBar section
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -404,7 +405,7 @@ class _UserSendPageState extends State<UserSendPage> {
             label: 'โปรไฟล์',
           ),
         ],
-        currentIndex: _selectedIndex,
+        currentIndex: _selectedIndex, // Set default status to show Receipt List
         selectedItemColor: Theme.of(context).primaryColor,
         unselectedItemColor: Colors.black,
         showSelectedLabels: true,
@@ -428,9 +429,10 @@ class _UserSendPageState extends State<UserSendPage> {
         'receiver_phone': _selectedReceiver!['receiver_phone'],
         'item_details': itemDetails,
         'reshiplocation': GeoPoint(
-          _selectedReceiver!['gps_location']['lat'],
-          _selectedReceiver!['gps_location']['lng'],
+          _selectedReceiver!['gps_location'],
+          _selectedReceiver!['gps_location'],
         ),
+        "send_status": 0,
       };
 
       // บันทึกข้อมูลไปยัง Firestore โดยใช้ add เพื่อสร้าง ID อัตโนมัติ

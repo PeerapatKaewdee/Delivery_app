@@ -1,7 +1,9 @@
+import 'package:delivery_app/page/Login.dart';
 import 'package:flutter/material.dart';
 import 'package:delivery_app/page/User_send.dart';
 import 'package:delivery_app/page/User_map.dart';
-import 'package:delivery_app/page/User_list.dart'; // Import UserListPage
+import 'package:delivery_app/page/User_list.dart';
+ // Import LoginPage
 
 class UserProfilePage extends StatefulWidget {
   int id = 0;
@@ -108,9 +110,12 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     width: 250, // กำหนดความกว้างของปุ่ม
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.of(context).popUntil(
-                          (route) => route.isFirst,
-                        ); // ฟังก์ชันที่ต้องการเมื่อกดปุ่ม "ออกจากระบบ"
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => LoginPage()), // ไปหน้า LoginPage
+                          (Route<dynamic> route) => false, // ลบเส้นทางทั้งหมด
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color.fromARGB(

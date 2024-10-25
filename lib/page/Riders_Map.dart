@@ -1,168 +1,326 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class RidersMapPage extends StatefulWidget {
-  int id = 0;
-  RidersMapPage({super.key, required this.id});
+  final String docId;
+  final int id;
+
+  const RidersMapPage({super.key, required this.id, required this.docId});
 
   @override
   State<RidersMapPage> createState() => _RidersMapPageState();
 }
 
 class _RidersMapPageState extends State<RidersMapPage> {
-  LatLng riderLatLng = const LatLng(16.246825669508297, 103.25199289277295);
-  LatLng destinationLatLng = const LatLng(0, 0); // ตำแหน่งปลายทาง
-  MapController mapController = MapController();
+  GoogleMapController? mapController;
   StreamSubscription<Position>? positionStream;
-  List<LatLng> routePoints = []; // เก็บจุดต่างๆ ในเส้นทาง
+  Marker? riderMarker;
+  Marker? destinationMarker;
+  List<LatLng> polylineCoordinates = [];
+  Polyline? routePolyline;
+
+  // กำหนดพิกัดเริ่มต้นสำหรับไรเดอร์และจุดหมาย
+  LatLng riderLatLng = const LatLng(13.7563, 100.5018); // Bangkok, Thailand
+  LatLng destinationLatLng =
+      const LatLng(13.7550, 100.5010); // ตัวอย่างพิกัดปลายทาง
+
+  bool isLoading = true;
+  bool isDestinationReached = false;
+  String errorMessage = '';
+  double distanceToDestination = double.infinity;
+
+  String currentStatus = 'pending'; // สถานะเริ่มต้น
+  final ImagePicker _picker = ImagePicker();
+  File? _imageFile;
+  bool isUploading = false;
 
   @override
   void initState() {
     super.initState();
-    _fetchDestination(); // ดึงตำแหน่งปลายทางจาก Firestore
-    _startLocationTracking(); // เริ่มติดตามตำแหน่งไรเดอร์แบบเรียลไทม์
+    _fetchCurrentStatus(); // เพิ่มการดึงสถานะปัจจุบัน
   }
 
-  @override
-  void dispose() {
-    positionStream?.cancel(); // ยกเลิกการติดตามเมื่อออกจากหน้า
-    super.dispose();
-  }
-
-  // ฟังก์ชันดึงข้อมูลตำแหน่งปลายทางจาก Firestore
-  Future<void> _fetchDestination() async {
-    var docSnapshot = await FirebaseFirestore.instance
-        .collection('Deliveries')
-        .doc(widget.id.toString())
-        .get();
-
-    if (docSnapshot.exists) {
-      var data = docSnapshot.data();
-      var reshipLocation = data?['reship_location'] as GeoPoint;
-      setState(() {
-        destinationLatLng =
-            LatLng(reshipLocation.latitude, reshipLocation.longitude);
-      });
+  Future<void> _fetchCurrentStatus() async {
+    try {
+      var doc = await FirebaseFirestore.instance
+          .collection('Delivery')
+          .doc(widget.docId)
+          .get();
+      if (doc.exists) {
+        setState(() {
+          currentStatus = doc.data()?['status'] ?? 'pending';
+        });
+      }
+    } catch (e) {
+      log('Error fetching status: $e');
     }
   }
 
-  // ฟังก์ชันติดตามตำแหน่งไรเดอร์
-  void _startLocationTracking() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      Future.error('Location services are disabled.');
-    }
-
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        Future.error('Location permissions are denied');
+  Future<void> _takePicture() async {
+    try {
+      final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
+      if (photo != null) {
+        setState(() {
+          _imageFile = File(photo.path);
+        });
+        await _uploadImage();
+      }
+    } catch (e) {
+      log('Error taking picture: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ไม่สามารถถ่ายรูปได้')),
+        );
       }
     }
+  }
 
-    if (permission == LocationPermission.deniedForever) {
-      Future.error('Location permissions are permanently denied.');
-    }
+  Future<String?> _uploadImage() async {
+    if (_imageFile == null) return null;
 
-    positionStream = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 10, // อัปเดตเมื่อเคลื่อนที่อย่างน้อย 10 เมตร
-      ),
-    ).listen((Position position) {
-      log('ตำแหน่งใหม่: ${position.latitude}, ${position.longitude}');
+    try {
       setState(() {
-        riderLatLng = LatLng(position.latitude, position.longitude);
-        mapController.move(riderLatLng, 15.0); // อัปเดตตำแหน่งและซูม
+        isUploading = true;
       });
-    });
+
+      String fileName =
+          'delivery_${widget.docId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      Reference ref = FirebaseStorage.instance
+          .ref()
+          .child('delivery_images')
+          .child(fileName);
+
+      await ref.putFile(_imageFile!);
+      String downloadURL = await ref.getDownloadURL();
+
+      await FirebaseFirestore.instance
+          .collection('Delivery')
+          .doc(widget.docId)
+          .update({
+        'photos': FieldValue.arrayUnion([
+          {
+            'url': downloadURL,
+            'status': currentStatus,
+            // 'timestamp': FieldValue.serverTimestamp(),
+          }
+        ]),
+      });
+
+      setState(() {
+        isUploading = false;
+        _imageFile = null;
+      });
+
+      return downloadURL;
+    } catch (e) {
+      log('Error uploading image: $e');
+      setState(() {
+        isUploading = false;
+      });
+      return null;
+    }
+  }
+
+  Future<void> _updateDeliveryStatus(String newStatus) async {
+    try {
+      await _takePicture();
+      if (_imageFile == null && newStatus != 'delivered') {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('กรุณาถ่ายรูปเพื่อยืนยันสถานะ')),
+          );
+        }
+        return;
+      }
+
+      await FirebaseFirestore.instance
+          .collection('Delivery')
+          .doc(widget.docId)
+          .update({
+        'status': newStatus,
+        'statusUpdatedAt': FieldValue.serverTimestamp(),
+      });
+
+      setState(() {
+        currentStatus = newStatus;
+      });
+
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: Text('อัพเดทสถานะสำเร็จ'),
+            content: Text(_getStatusMessage(newStatus)),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  if (newStatus == 'delivered') {
+                    Navigator.of(context).pop();
+                  }
+                },
+                child: const Text('ตกลง'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('เกิดข้อผิดพลาด: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  String _getStatusMessage(String status) {
+    switch (status) {
+      case 'picked_up':
+        return 'รับสินค้าเรียบร้อยแล้ว';
+      case 'delivering':
+        return 'กำลังจัดส่งสินค้า';
+      case 'delivered':
+        return 'จัดส่งสินค้าสำเร็จ';
+      default:
+        return 'อัพเดทสถานะเรียบร้อย';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Center(child: Text("Rider Map")),
-      ),
-      body: Center(
-        child: Column(
-          children: [
-            const SizedBox(height: 30),
-            Expanded(
-              flex: 6,
-              child: FlutterMap(
-                mapController: mapController,
-                options: MapOptions(
-                  initialCenter: riderLatLng,
-                  initialZoom: 15.0,
-                ),
-                children: [
-                  TileLayer(
-                    urlTemplate:
-                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    userAgentPackageName: 'com.example.app',
+        title: const Text("แผนที่การจัดส่ง"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.my_location),
+            onPressed: () {
+              if (riderLatLng != const LatLng(0, 0)) {
+                mapController?.animateCamera(
+                  CameraUpdate.newCameraPosition(
+                    CameraPosition(target: riderLatLng, zoom: 17),
                   ),
-                  MarkerLayer(
-                    markers: [
-                      Marker(
-                        point: riderLatLng,
-                        width: 40,
-                        height: 40,
-                        child: const Icon(
-                          Icons.motorcycle_rounded,
-                          color: Colors.black,
-                          size: 30,
+                );
+              }
+            },
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: riderLatLng,
+                zoom: 15,
+              ),
+              markers: {
+                if (riderMarker != null) riderMarker!,
+                if (destinationMarker != null) destinationMarker!,
+              },
+              polylines: {
+                if (routePolyline != null) routePolyline!,
+              },
+              onMapCreated: (GoogleMapController controller) {
+                mapController = controller;
+              },
+              myLocationEnabled: true,
+              myLocationButtonEnabled: false,
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.3),
+                  spreadRadius: 1,
+                  blurRadius: 5,
+                  offset: const Offset(0, -2),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (distanceToDestination != double.infinity) ...[
+                  Text(
+                    'ระยะทางถึงจุดหมาย: ${(distanceToDestination / 1000).toStringAsFixed(2)} กม.',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                Text(
+                  'สถานะปัจจุบัน: ${_getStatusMessage(currentStatus)}',
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                if (isUploading)
+                  const CircularProgressIndicator()
+                else
+                  Column(
+                    children: [
+                      if (currentStatus == 'pending')
+                        ElevatedButton(
+                          onPressed: () => _updateDeliveryStatus('picked_up'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            minimumSize: const Size(double.infinity, 50),
+                          ),
+                          child: const Text(
+                            'รับสินค้า',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
-                      ),
-                      Marker(
-                        point: destinationLatLng,
-                        width: 40,
-                        height: 40,
-                        child: const Icon(
-                          Icons.location_pin,
-                          color: Colors.red,
-                          size: 30,
+                      const SizedBox(height: 8),
+                      if (currentStatus == 'picked_up')
+                        ElevatedButton(
+                          onPressed: () => _updateDeliveryStatus('delivering'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            minimumSize: const Size(double.infinity, 50),
+                          ),
+                          child: const Text('เริ่มจัดส่ง'),
                         ),
-                      ),
+                      const SizedBox(height: 8),
+                      if (currentStatus == 'delivering')
+                        ElevatedButton(
+                          onPressed: isDestinationReached
+                              ? () => _updateDeliveryStatus('delivered')
+                              : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            minimumSize: const Size(double.infinity, 50),
+                          ),
+                          child: Text(
+                            isDestinationReached
+                                ? "ยืนยันการจัดส่ง"
+                                : "ยังไม่ถึงจุดหมาย",
+                          ),
+                        ),
                     ],
                   ),
-                ],
-              ),
+              ],
             ),
-            const SizedBox(height: 50),
-            Expanded(
-              flex: 1,
-              child: Column(
-                children: [
-                  FilledButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 0, 222, 22),
-                      shadowColor: Colors.black,
-                      elevation: 10,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text(
-                      "ถึงจุดหมายแล้ว",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

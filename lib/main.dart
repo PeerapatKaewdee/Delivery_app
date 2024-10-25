@@ -3,6 +3,7 @@ import 'package:delivery_app/firebase_options.dart';
 import 'package:delivery_app/page/Risers_Get.dart';
 import 'package:delivery_app/page/Selecttype.dart';
 import 'package:delivery_app/page/User_send.dart';
+import 'package:delivery_app/page/map.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:delivery_app/page/Login.dart';
@@ -32,8 +33,8 @@ class MyApp extends StatelessWidget {
       //home : RegisterRider()
       // home: RegisterCustomer()
       // home:Selecttype(),
-      // home: LoginPage(),
-      home: RidersGetPage(id: 1),
+      home: LoginPage(),
+      // home: RidersGetPage(id: 1),
     );
   }
 }

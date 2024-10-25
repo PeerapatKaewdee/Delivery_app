@@ -1,5 +1,8 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:delivery_app/page/Riders_Map.dart';
+import 'package:delivery_app/page/User_Profile.dart';
 import 'package:flutter/material.dart';
 
 class RidersGetPage extends StatefulWidget {
@@ -26,11 +29,13 @@ class _RidersGetPageState extends State<RidersGetPage> {
         'rider_status': 1, // สถานะไรเดอร์
       });
       print('ข้อมูลไรเดอร์ถูกอัปเดตเรียบร้อยแล้ว');
+      log(docId.toString());
       Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => RidersMapPage(
               id: widget.id,
+              docId: docId,
             ),
           ));
     } catch (e) {
@@ -61,7 +66,13 @@ class _RidersGetPageState extends State<RidersGetPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.person),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserProfilePage(id: 0),
+                  ));
+            },
           ),
         ],
         centerTitle: true,
@@ -87,7 +98,16 @@ class _RidersGetPageState extends State<RidersGetPage> {
                 return const Center(child: Text('ไม่มีข้อมูลรายการส่งสินค้า'));
               }
 
-              final items = snapshot.data!.docs;
+              // กรองรายการที่ rider_status ไม่เท่ากับ 1
+              final items = snapshot.data!.docs.where((doc) {
+                final data = doc.data() as Map<String, dynamic>;
+                return data['rider_status'] !=
+                    1; // กรองเฉพาะที่ rider_status ไม่เป็น 1
+              }).toList();
+
+              if (items.isEmpty) {
+                return const Center(child: Text('ไม่มีงานที่ต้องทำ'));
+              }
 
               return Column(
                 children: items.map((doc) {
@@ -107,7 +127,6 @@ class _RidersGetPageState extends State<RidersGetPage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const SizedBox(height: 10.0),
-                          // ตรวจสอบ URL รูปภาพและแสดงไอคอนถ้าไม่มี
                           data['imageUrl'] != null &&
                                   data['imageUrl']!.isNotEmpty
                               ? ClipRRect(
@@ -122,7 +141,8 @@ class _RidersGetPageState extends State<RidersGetPage> {
                               : Icon(
                                   Icons.image,
                                   size: screenSize.height * 0.10,
-                                  color: Colors.grey, // สีของไอคอน
+                                  color: const Color.fromARGB(
+                                      255, 255, 255, 255), // สีของไอคอน
                                 ),
                           const SizedBox(height: 10.0),
                           Text(

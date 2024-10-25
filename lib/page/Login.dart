@@ -148,14 +148,14 @@ class _LoginPageState extends State<LoginPage> {
                                 login();
                               },
                               style: ButtonStyle(
-                                backgroundColor: MaterialStateProperty.all<Color>(
+                                backgroundColor: WidgetStateProperty.all<Color>(
                                   const Color.fromARGB(255, 1, 255, 98),
                                 ),
-                                foregroundColor: MaterialStateProperty.all<Color>(
+                                foregroundColor: WidgetStateProperty.all<Color>(
                                   const Color.fromARGB(255, 255, 255, 255),
                                 ),
-                                elevation: MaterialStateProperty.all<double>(5.0),
-                                shape: MaterialStateProperty.all<OutlinedBorder>(
+                                elevation: WidgetStateProperty.all<double>(5.0),
+                                shape: WidgetStateProperty.all<OutlinedBorder>(
                                   RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20.0),
                                   ),

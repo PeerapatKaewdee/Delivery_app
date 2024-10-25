@@ -3,6 +3,7 @@ import 'package:delivery_app/page/User_send.dart';
 import 'package:delivery_app/page/User_map.dart'; // Import UserMapPage
 import 'package:delivery_app/page/User_Profile.dart'; // Import UserProfilePage
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 enum DeliveryStatus { status1, status2, status3 }
 
@@ -17,6 +18,7 @@ class UserListPage extends StatefulWidget {
 class _UserListPageState extends State<UserListPage> {
   DeliveryStatus _selectedStatus = DeliveryStatus.status1; // Current status
   int _selectedIndex = 2; // Default index for UserListPage
+  // File? _image;
 
   void _onItemTapped(int index) {
     setState(() {
@@ -51,6 +53,10 @@ class _UserListPageState extends State<UserListPage> {
         break;
       // case 2: // Stay on UserListPage
     }
+  }
+
+  void _pickImage() {
+    // Logic to pick image
   }
 
   @override
@@ -112,56 +118,102 @@ class _UserListPageState extends State<UserListPage> {
               ),
             ),
             const SizedBox(height: 50),
-            StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('Delivery')
-                  .where('reship_id', isEqualTo: widget.id) // ใช้ reship_id
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+            // Firestore ListView
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('Delivery')
+                    .where('reship_id', isEqualTo: widget.id)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                if (snapshot.hasError) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('เกิดข้อผิดพลาด: ${snapshot.error}'),
-                    ),
-                  );
-                  return const Center(child: Text('เกิดข้อผิดพลาด'));
-                }
-
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(
-                      child: Text('ไม่มีข้อมูลรายการส่งสินค้า'));
-                }
-
-                final items = snapshot.data!.docs;
-
-                return ListView.builder(
-                  itemCount: items.length,
-                  itemBuilder: (context, index) {
-                    final item = items[index].data() as Map<String, dynamic>;
-
-                    return Card(
-                      elevation: 4,
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: ListTile(
-                        title: Text(
-                          item['description'] ??
-                              'ไม่มีรายละเอียด', // แสดงรายละเอียดสินค้า
-                          style: const TextStyle(fontSize: 18),
-                        ),
-                        trailing: const Icon(Icons
-                            .arrow_forward), // ไอคอนสำหรับรายละเอียดเพิ่มเติม
-                      ),
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text('เกิดข้อผิดพลาด: ${snapshot.error}'),
                     );
-                  },
-                );
-              },
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(
+                        child: Text('ไม่มีข้อมูลรายการส่งสินค้า'));
+                  }
+
+                  return ListView.builder(
+                    itemCount: snapshot.data!.docs.length,
+                    itemBuilder: (context, index) {
+                      final deliveryData = snapshot.data!.docs[index].data()
+                          as Map<String, dynamic>;
+
+                      return GestureDetector(
+                        onTap: () {
+                          // ตรวจสอบว่ามีพิกัดใน Firestore
+                          if (deliveryData['latitude'] != null &&
+                              deliveryData['longitude'] != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MapPage(
+                                  id: widget.id,
+                                  latitude: deliveryData['lat'],
+                                  longitude: deliveryData['lng'],
+                                ),
+                              ),
+                            );
+                          } else {
+                            // แสดงข้อความเตือนถ้าไม่มีพิกัด
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content:
+                                      Text('ไม่มีพิกัดสำหรับการแสดงแผนที่')),
+                            );
+                          }
+                        },
+                        child: Card(
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 2,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'รายละเอียดของที่ส่ง',
+                                        style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'รายละเอียดสินค้า: ${deliveryData['description'] ?? 'ไม่มีรายละเอียด'}',
+                                        style: const TextStyle(fontSize: 16),
+                                      ),
+                                      Text(
+                                        'สถานะ: ${deliveryData['status'] ?? 'ไม่มีสถานะ'}',
+                                        style: const TextStyle(fontSize: 16),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),
@@ -192,6 +244,66 @@ class _UserListPageState extends State<UserListPage> {
         showSelectedLabels: true,
         showUnselectedLabels: true,
         onTap: _onItemTapped,
+      ),
+    );
+  }
+}
+
+class MapPage extends StatefulWidget {
+  final int id;
+  final double latitude; // เพิ่มพิกัด latitude
+  final double longitude; // เพิ่มพิกัด longitude
+
+  MapPage({
+    super.key,
+    required this.id,
+    required this.latitude,
+    required this.longitude,
+  });
+
+  @override
+  _MapPageState createState() => _MapPageState();
+}
+
+class _MapPageState extends State<MapPage> {
+  late GoogleMapController mapController;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  void _onMapCreated(GoogleMapController controller) {
+    mapController = controller;
+    _goToLocation();
+  }
+
+  void _goToLocation() {
+    mapController.animateCamera(
+      CameraUpdate.newLatLngZoom(
+        LatLng(widget.latitude, widget.longitude),
+        14.0, // กำหนดระดับการซูม
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('แผนที่')),
+      body: GoogleMap(
+        onMapCreated: _onMapCreated,
+        initialCameraPosition: CameraPosition(
+          target: LatLng(widget.latitude, widget.longitude),
+          zoom: 14.0, // ระดับการซูมเริ่มต้น
+        ),
+        markers: {
+          Marker(
+            markerId: MarkerId('delivery_location'),
+            position: LatLng(widget.latitude, widget.longitude),
+            infoWindow: InfoWindow(title: 'สถานที่ส่งสินค้า'),
+          ),
+        },
       ),
     );
   }
