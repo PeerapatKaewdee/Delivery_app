@@ -110,7 +110,7 @@ class _UserSendPageState extends State<UserSendPage> {
           ],
         }),
       );
-
+      log(response.statusCode.toString());
       if (response.statusCode == 201) {
         setState(() {
           _deliveries.add({
@@ -429,8 +429,8 @@ class _UserSendPageState extends State<UserSendPage> {
         'receiver_phone': _selectedReceiver!['receiver_phone'],
         'item_details': itemDetails,
         'reshiplocation': GeoPoint(
-          _selectedReceiver!['gps_location']['lat'],
-          _selectedReceiver!['gps_location']['lng'],
+          _selectedReceiver!['gps_location'],
+          _selectedReceiver!['gps_location'],
         ),
         "send_status": 0,
       };

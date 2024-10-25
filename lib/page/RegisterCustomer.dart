@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:delivery_app/config/config.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:delivery_app/page/Login.dart';
 import 'package:delivery_app/page/RegisterRider.dart';
@@ -684,6 +686,54 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
           ),
         );
       });
+    }
+  }
+
+  // Method อัปโหลดรูปไปยัง Firebase Storage
+  Future<String?> uploadImageToStorage(XFile image) async {
+    try {
+      // สร้าง reference ไปยังตำแหน่งที่จะเก็บไฟล์ใน Firebase Storage
+      Reference storageRef = FirebaseStorage.instance
+          .ref()
+          .child('profile_images/${DateTime.now().toString()}.jpg');
+
+      // อัปโหลดไฟล์ไปยัง Firebase Storage
+      UploadTask uploadTask = storageRef.putFile(File(image.path));
+      TaskSnapshot snapshot = await uploadTask;
+
+      // รับ URL ของรูปที่อัปโหลดแล้ว
+      String downloadURL = await snapshot.ref.getDownloadURL();
+      return downloadURL;
+    } catch (e) {
+      log('Error uploading image: $e');
+      return null;
+    }
+  }
+
+  // Method บันทึก URL ของรูปใน Firestore
+  Future<void> saveImageUrlToFirestore(String downloadUrl) async {
+    try {
+      await FirebaseFirestore.instance.collection('users').doc('user_id').set({
+        'profileImageUrl': downloadUrl,
+      });
+      log('Image URL saved to Firestore');
+    } catch (e) {
+      log('Error saving image URL: $e');
+    }
+  }
+
+  // เมื่อกดปุ่มยืนยัน
+  Future<void> onConfirm() async {
+    if (image != null) {
+      // 1. อัปโหลดรูปไป Firebase Storage
+      String? downloadUrl = await uploadImageToStorage(image!);
+
+      if (downloadUrl != null) {
+        // 2. บันทึก URL ลง Firestore
+        await saveImageUrlToFirestore(downloadUrl);
+      }
+    } else {
+      log('No image selected');
     }
   }
 }

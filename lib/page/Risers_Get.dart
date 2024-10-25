@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:delivery_app/page/Riders_Map.dart';
+import 'package:delivery_app/page/User_Profile.dart';
 import 'package:flutter/material.dart';
 
 class RidersGetPage extends StatefulWidget {
@@ -65,7 +66,13 @@ class _RidersGetPageState extends State<RidersGetPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.person),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserProfilePage(id: 0),
+                  ));
+            },
           ),
         ],
         centerTitle: true,
@@ -134,7 +141,8 @@ class _RidersGetPageState extends State<RidersGetPage> {
                               : Icon(
                                   Icons.image,
                                   size: screenSize.height * 0.10,
-                                  color: Colors.grey, // สีของไอคอน
+                                  color: const Color.fromARGB(
+                                      255, 255, 255, 255), // สีของไอคอน
                                 ),
                           const SizedBox(height: 10.0),
                           Text(

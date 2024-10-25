@@ -110,7 +110,7 @@ class _RidersMapPageState extends State<RidersMapPage> {
           {
             'url': downloadURL,
             'status': currentStatus,
-            'timestamp': FieldValue.serverTimestamp(),
+            // 'timestamp': FieldValue.serverTimestamp(),
           }
         ]),
       });
@@ -280,7 +280,14 @@ class _RidersMapPageState extends State<RidersMapPage> {
                             backgroundColor: Colors.blue,
                             minimumSize: const Size(double.infinity, 50),
                           ),
-                          child: const Text('รับสินค้า'),
+                          child: const Text(
+                            'รับสินค้า',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       const SizedBox(height: 8),
                       if (currentStatus == 'picked_up')
