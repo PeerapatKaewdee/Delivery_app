@@ -228,7 +228,7 @@ class _RegisterCustomerState extends State<RegisterCustomer> {
                                   borderSide: BorderSide.none,
                                 ),
                               ),
-                              keyboardType: TextInputType.number,
+                              // keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 10.0), // Spacing
                             const Text(
